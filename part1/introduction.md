@@ -11,11 +11,11 @@ Axon Framework Background
 A brief history
 ---------------
 
-The demands on software projects increase rapidly as time progresses. Companies want their (web)applications to evolve together with their business. That means that not only projects and code bases become more complex, it also means that functionality is constantly added, changed and (unfortunately not enough) removed. It can be frustrating to find out that a seemingly easy-to-implement feature can require development teams to take apart an entire application. Furthermore, today's web applications target the audience of potentially billions of people, making scalability an indisputable requirement.
+随着时间的推移，对软件项目的需求迅速增加。 公司希望他们的（网络）应用程序与他们的业务一起发展。 这意味着不仅项目和代码库变得更加复杂，而且意味着不断添加，更改和（不幸不够）的功能被删除。 发现一个看起来很容易实现的功能可能要求开发团队拆分整个应用程序可能令人沮丧。 此外，今天的Web应用程序面向潜在数十亿人的受众，使可扩展性成为不争的要求。
 
-Although there are many applications and frameworks around that deal with scalability issues, such as GigaSpaces and Terracotta, they share one fundamental flaw. These stacks try to solve the scalability issues while letting developers develop applications using the layered architecture they are used to. In some cases, they even prevent or severely limit the use of a real domain model, forcing all domain logic into services. Although that is faster to start building an application, eventually this approach will cause complexity to increase and development to slow down.
+虽然有很多应用程序和框架涉及可扩展性问题，例如GigaSpaces和Terracotta，但它们有一个基本缺陷。 这些堆栈尝试解决可伸缩性问题，同时让开发人员使用他们习惯的分层架构开发应用程序。 在某些情况下，他们甚至会阻止或严重限制使用真实域模型，从而迫使所有域逻辑进入服务。 尽管开始构建应用程序的速度会更快，但最终这种方法会导致复杂性增加并使开发速度放慢。
 
-The Command Query Responsibility Segregation (CQRS) pattern addresses these issues by drastically changing the way applications are architected. Instead of separating logic into separate layers, logic is separated based on whether it is changing an application's state or querying it. That means that executing commands (actions that potentially change an application's state) are executed by different components than those that query for the application's state. The most important reason for this separation is the fact that there are different technical and non-technical requirements for each of them. When commands are executed, the query components are (a)synchronously updated using events. This mechanism of updates through events, is what makes this architecture so extensible, scalable and ultimately more maintainable.
+命令查询责任分离（CQRS）模式通过彻底改变应用程序架构的方式来解决这些问题。 逻辑不是将逻辑分成单独的层，而是基于它是在改变应用程序的状态还是在查询逻辑。 这意味着执行命令（可能改变应用程序状态的动作）由与查询应用程序状态的组件不同的组件执行。 这种分离的最重要原因是每个人都有不同的技术和非技术要求。 当执行命令时，查询组件（a）使用事件同步更新。 这种通过事件进行更新的机制，使得这种架构具有可扩展性，可伸缩性并最终能够更好地维护。
 
 > **Note**
 >
