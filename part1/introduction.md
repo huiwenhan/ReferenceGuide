@@ -21,7 +21,7 @@ A brief history
 >
 > A full explanation of CQRS is not within the scope of this document. If you would like to have more background information about CQRS, visit the Axon Framework website: [www.axonframework.org](http://www.axonframework.org/). It contains links to background information.
 
-Since CQRS is fundamentally different than the layered-architecture which dominates today's software landscape, it is not uncommon for developers to walk into a few traps while trying to find their way around this architecture. That's why Axon Framework was conceived: to help developers implement CQRS applications while focusing on the business logic.
+由于CQRS与主导当今软件领域的分层架构截然不同，因此开发人员在尝试围绕此架构寻找解决方案时陷入一些陷阱并不罕见。 这就是Axon Framework构思的原因：帮助开发人员在关注业务逻辑的同时实施CQRS应用程序。
 
 What is Axon?
 -------------
