@@ -1,14 +1,14 @@
 Event Handling
 ===============
 
-Event listeners are the components that act on incoming events. They typically execute logic based on decisions that have been made by the command model. Usually, this involves updating view models or forwarding updates to other components, such as 3rd party integrations. In some cases Event Handlers will throw Events themselves based on (patterns of) Events that they received, or even send Commands to trigger further changes. 
+事件侦听器是对传入事件起作用的组件。 他们通常根据命令模型所做的决定来执行逻辑。 通常，这涉及更新视图模型或将更新转发到其他组件，例如第三方集成。 在某些情况下，事件处理程序会根据事件的（模式）自己抛出事件，或者甚至发送命令来触发进一步的更改。
 
 Defining Event Handlers
 -----------------------
 
-In Axon, an object may declare a number of Event Handler methods, by annotating them with `@EventHandler`. The declared parameters of the method define which events it will receive.
+在Axon中，一个对象可以声明一些Event Handler方法，用`@ EventHandler`注释它们。 该方法的声明参数定义了它将接收哪些事件。
 
-Axon provides out-of-the-box support for the following parameter types:
+Axon为以下参数类型提供开箱即用的支持：
 
 * The first parameter is always the payload of the Event Message. In the case the Event Handlers doesn't need access to the payload of the message, you can specify the expected payload type on the `@EventHandler` annotation. When specified, the first parameter is resolved using the rules specified below. Do not configure the payload type on the annotation if you want the payload to be passed as a parameter.
 
@@ -26,7 +26,7 @@ Axon provides out-of-the-box support for the following parameter types:
 
 You can configure additional `ParameterResolver`s by implementing the `ParameterResolverFactory` interface and creating a file named `/META-INF/service/org.axonframework.common.annotation.ParameterResolverFactory` containing the fully qualified name of the implementing class. See [Advanced Customizations](../part4/advanced-customizations.md) for details.
 
-In all circumstances, at most one event handler method is invoked per listener instance. Axon will search for the most specific method to invoke, using following rules:
+在所有情况下，每个侦听器实例最多调用一个事件处理程序方法。 Axon将使用以下规则搜索最具体的调用方法：
 
 1. On the actual instance level of the class hierarchy (as returned by `this.getClass()`), all annotated methods are evaluated
 
@@ -64,9 +64,9 @@ In the example above, the handler methods of `SubListener` will be invoked for a
 
 Registering Event Handlers
 -----------------------------
-Event Handling components are defined using an `EventHandlingConfiguration` class, which is registered as a module with the global Axon `Configurer`. Typically, an application will have a single `EventHandlingConfiguration` defined, but larger more modular applications may choose to define one per module.
+事件处理组件是通过一个`EventHandlingConfiguration`类来定义的，该类被注册为全局Axon`Configurer`的模块。 通常情况下，应用程序会定义一个`EventHandlingConfiguration`，但更大的模块化应用程序可能会选择为每个模块定义一个。
 
-To register objects with `@EventHandler` methods, use the `registerEventHandler` method on the `EventHandlingConfiguration`:
+要使用`@ EventHandler`方法注册对象，请在`EventHandlingConfiguration`上使用`registerEventHandler`方法：
 
 ```java
 // define an EventHandlingConfiguration
@@ -78,4 +78,4 @@ Configurer axonConfigurer = DefaultConfigurer.defaultConfiguration()
     .registerModule(ehConfiguration);
 ```
 
-See [Event Handling Configuration](../part3/spring-boot-autoconfig.md#event-handling-configuration) for details on registering event handlers using Spring AutoConfiguration.
+有关使用Spring AutoConfiguration注册事件处理程序的详细信息,请看 [Event Handling Configuration](../part3/spring-boot-autoconfig.md#event-handling-configuration)
