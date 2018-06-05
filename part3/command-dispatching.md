@@ -1,50 +1,50 @@
 Command Dispatching
 ===================
 
-The use of an explicit command dispatching mechanism has a number of advantages. First of all, there is a single object that clearly describes the intent of the client. By logging the command, you store both the intent and related data for future reference. Command handling also makes it easy to expose your command processing components to remote clients, via web services for example. Testing also becomes a lot easier, you could define test scripts by just defining the starting situation (given), command to execute (when) and expected results (then) by listing a number of events and commands (see [Testing](../part2/testing.md)). The last major advantage is that it is very easy to switch between synchronous and asynchronous as well as local versus distributed command processing.
+使用明确的命令调度机制具有许多优点。 首先，有一个对象清楚地描述了客户的意图。 通过记录命令，您可以存储意图数据和相关数据以备将来参考。 命令处理还可以很容易地通过Web服务将命令处理组件公开给远程客户端。 测试也变得容易很多，您可以通过定义开始的情况（给定），命令执行（时机）和预期结果（然后）列出一些事件和命令来定义测试脚本（参见[测试]（../part2/testing.md））。 最后一个主要优势是，在同步和异步以及本地和分布式命令处理之间切换非常容易。
 
-This doesn't mean Command dispatching using explicit command object is the only way to do it. The goal of Axon is not to prescribe a specific way of working, but to support you doing it your way, while providing best practices as the default behavior. It is still possible to use a Service layer that you can invoke to execute commands. The method will just need to start a unit of work (see [Unit of Work](../part1/messaging-concepts.md#unit-of-work)) and perform a commit or rollback on it when the method is finished.
+这并不意味着使用显式命令对象进行命令分派是实现它的唯一方法。 Axon的目标不是规定特定的工作方式，而是支持您按自己的方式进行操作，同时提供最佳做法作为默认行为。 仍然可以使用可以调用的服务层来执行命令。 该方法只需启动一个工作单元（请参见[工作单元]（../ part1 / messaging-concepts.md＃工作单元）），并在方法完成时对其执行提交或回滚。
 
-The next sections provide an overview of the tasks related to setting up a Command dispatching infrastructure with the Axon Framework.
+接下来的部分概述了与使用Axon框架设置Command调度基础架构有关的任务。
 
 The Command Gateway
 ===================
 
-The Command Gateway is a convenient interface towards the Command dispatching mechanism. While you are not required to use a Gateway to dispatch Commands, it is generally the easiest option to do so.
+Command Gateway是Command调度机制的便捷接口。 虽然您不需要使用网关来分派命令，但通常这是最简单的选择。
 
-There are two ways to use a Command Gateway. The first is to use the `CommandGateway` interface and the `DefaultCommandGateway` implementation provided by Axon. The command gateway provides a number of methods that allow you to send a command and wait for a result either synchronously, with a timeout or asynchronously.
+有两种使用Command Gateway的方法。 首先是使用Axon提供的CommandGateway接口和DefaultCommandGateway实现。 命令网关提供了许多方法，允许您发送命令并同步等待结果，具有超时或异步。
 
-The other option is perhaps the most flexible of all. You can turn almost any interface into a Command Gateway using the `CommandGatewayFactory`. This allows you to define your application's interface using strong typing and declaring your own (checked) business exceptions. Axon will automatically generate an implementation for that interface at runtime.
+另一种选择也许是最灵活的。 你可以使用`CommandGatewayFactory`将几乎任何接口变成一个命令网关。 这使您可以使用强类型定义应用程序的界面，并声明自己的（已检查）业务异常。 Axon会在运行时自动为该接口生成一个实现。
 
 Configuring the Command Gateway
 -------------------------------
 
-Both your custom gateway and the one provided by Axon need to be configured with at least access to the Command Bus. In addition, the Command Gateway can be configured with a `RetryScheduler`, `CommandDispatchInterceptor`s, and `CommandCallback`s.
+您的自定义网关和Axon提供的自定义网关都必须配置为至少可以访问Command Bus。 另外，Command Gateway可以配置一个`RetryScheduler`，`CommandDispatchInterceptor`s和`CommandCallback`s。
 
-The `RetryScheduler` is capable of scheduling retries when command execution has failed. The `IntervalRetryScheduler` is an implementation that will retry a given command at set intervals until it succeeds, or a maximum number of retries is done. When a command fails due to an exception that is explicitly non-transient, no retries are done at all. Note that the retry scheduler is only invoked when a command fails due to a `RuntimeException`. Checked exceptions are regarded "business exception" and will never trigger a retry. Typical usage of a `RetryScheduler` is when dispatching commands on a Distributed Command Bus. If a node fails, the Retry Scheduler will cause a command to be dispatched to the next node capable of processing the command (see [Distributing the Command Bus](#distributing-the-command-bus)).
+当命令执行失败时，`RetryScheduler`能够安排重试。 IntervalRetryScheduler是一个实现，它将以设定的时间间隔重试给定的命令，直到它成功为止，或者重试次数达到最大值。 当一个命令因显式非瞬态异常而失败时，根本不会执行重试。 请注意，只有当命令由于RuntimeException而失败时，才会调用重试调度程序。 检查异常被视为“业务异常”，并且永远不会触发重试。 “RetryScheduler”的典型用法是在分布式Command Bus上分派命令时。 如果某个节点发生故障，则重试调度程序将导致将命令分派给能够处理该命令的下一个节点（请参阅[分配命令总线]（＃distribute-the-command-bus））。
 
-`CommandDispatchInterceptor`s allow modification of `CommandMessage`s prior to dispatching them to the Command Bus. In contrast to `CommandDispatchInterceptor`s configured on the CommandBus, these interceptors are only invoked when messages are sent through this gateway. The interceptors can be used to attach meta data to a command or do validation, for example.
+CommandDispatchInterceptor允许在将CommandMessage发送到Command Bus之前进行修改。 与在CommandBus上配置的CommandDispatchInterceptor相比，只有在通过此网关发送消息时才会调用这些拦截器。 例如，拦截器可用于将元数据附加到命令或进行验证。
 
-The `CommandCallback`s are invoked for each command sent. This allows for some generic behavior for all Commands sent through this gateway, regardless of their type.
+为每个发送的命令调用CommandCallback。 这允许通过此网关发送的所有命令的一些通用行为，而不管它们的类型如何。
 
 Creating a Custom Command Gateway
 ---------------------------------
 
-Axon allows a custom interface to be used as a Command Gateway. The behavior of each method declared in the interface is based on the parameter types, return type and declared exception. Using this gateway is not only convenient, it makes testing a lot easier by allowing you to mock your interface where needed.
+Axon允许将自定义界面用作命令网关。 在接口中声明的每个方法的行为都基于参数类型，返回类型和声明的异常。 使用这个网关不仅方便，而且允许您在需要的地方模拟您的界面，从而使测试变得更加简单。
 
-This is how parameters affect the behavior of the CommandGateway:
+这是参数如何影响CommandGateway的行为：
 
--   The first parameter is expected to be the actual command object to dispatch.
+-   预计第一个参数是要分派的实际命令对象。
 
--   Parameters annotated with `@MetaDataValue` will have their value assigned to the meta data field with the identifier passed as annotation parameter
+-   用@ MetaDataValue注解的参数将赋值给元数据字段，其中标识符作为注释参数传递
 
--   Parameters of type `MetaData` will be merged with the `MetaData` on the CommandMessage. Meta data defined by latter parameters will overwrite the meta data of earlier parameters, if their key is equal.
+-   “MetaData”类型的参数将与CommandMessage上的“MetaData”合并。 如果它们的密钥相同，则由后面的参数定义的元数据将覆盖较早参数的元数据。
 
--   Parameters of type `CommandCallback` will have their `onSuccess` or `onFailure` invoked after the Command is handled. You may pass in more than one callback, and it may be combined with a return value. In that case, the invocations of the callback will always match with the return value (or exception).
+-   CommandCallback类型的参数将在命令处理后调用onSuccess或onFailure。 您可能传入多个回调，并可能与返回值组合。 在这种情况下，回调的调用将始终与返回值（或异常）相匹配。
 
--   The last two parameters may be of types `long` (or `int`) and `TimeUnit`. In that case the method will block at most as long as these parameters indicate. How the method reacts on a timeout depends on the exceptions declared on the method (see below). Note that if other properties of the method prevent blocking altogether, a timeout will never occur.
+-   最后两个参数的类型可以是`long`（或`int`）和`TimeUnit`。 在这种情况下，只要这些参数指示，该方法将最多阻止。 该方法如何在超时上作出反应取决于方法中声明的异常（请参见下文）。 请注意，如果方法的其他属性完全阻止阻塞，则永远不会发生超时。
 
-The declared return value of a method will also affect its behavior:
+方法的声明返回值也会影响其行为：
 
 -   A `void` return type will cause the method to return immediately, unless there are other indications on the method that one would want to wait, such as a timeout or declared exceptions.
 
@@ -100,55 +100,55 @@ MyGateway myGateway = factory.createGateway(MyGateway.class);
 The Command Bus
 ===============
 
-The Command Bus is the mechanism that dispatches commands to their respective Command Handlers. Each Command is always sent to exactly one command handler. If no command handler is available for the dispatched command, a `NoHandlerForCommandException` exception is thrown. Subscribing multiple command handlers to the same command type will result in subscriptions replacing each other. In that case, the last subscription wins.
+命令总线是将命令调度到它们各自的命令处理程序的机制。 每个命令总是发送到一个命令处理程序。 如果没有命令处理程序可用于分派的命令，则引发`NoHandlerForCommandException`异常。 将多个命令处理程序订阅到相同的命令类型将导致订阅相互替换。 在这种情况下，最后一次订阅获胜。
 
 Dispatching commands
 --------------------
 
-The CommandBus provides two methods to dispatch commands to their respective handler: `dispatch(commandMessage, callback)` and `dispatch(commandMessage)`. The first parameter is a message containing the actual command to dispatch. The optional second parameter takes a callback that allows the dispatching component to be notified when command handling is completed. This callback has two methods: `onSuccess()` and `onFailure()`, which are called when command handling returned normally, or when it threw an exception, respectively.
+CommandBus提供了两种方法来将命令分派给它们各自的处理程序：`dispatch（commandMessage，callback）`和`dispatch（commandMessage）`。 第一个参数是包含实际分派的命令的消息。 可选的第二个参数需要一个回调，该命令允许在命令处理完成时通知调度组件。 这个回调函数有两个方法：`onSuccess（）`和`onFailure（）`，它们分别在命令处理正常返回或者抛出异常时被调用。
 
-The calling component may not assume that the callback is invoked in the same thread that dispatched the command. If the calling thread depends on the result before continuing, you can use the `FutureCallback`. It is a combination of a `Future` (as defined in the java.concurrent package) and Axon's `CommandCallback`. Alternatively, consider using a Command Gateway.
+调用组件可能不会认为回调是在调度该命令的同一个线程中调用的。 如果调用线程在继续之前依赖于结果，则可以使用“FutureCallback”。 它是'Future'（在java.concurrent包中定义）和Axon的 'CommandCallback` 的组合。 或者，考虑使用Command Gateway。
 
-If an application isn't directly interested in the outcome of a Command, the `dispatch(commandMessage)` method can be used.
+如果应用程序不直接对Command的结果感兴趣，则可以使用`dispatch（commandMessage）`方法。
 
 SimpleCommandBus
 ----------------
 
-The `SimpleCommandBus` is, as the name suggests, the simplest implementation. It does straightforward processing of commands in the thread that dispatches them. After a command is processed, the modified aggregate(s) are saved and generated events are published in that same thread. In most scenarios, such as web applications, this implementation will suit your needs. The `SimpleCommandBus` is the implementation used by default in the Configuration API.
+“SimpleCommandBus”顾名思义就是最简单的实现。 它可以直接处理调度它们的线程中的命令。 处理完命令后，修改后的聚合被保存，生成的事件将在同一个线程中发布。 在大多数情况下，例如Web应用程序，此实现将满足您的需求。 SimpleCommandBus是配置API中默认使用的实现。
 
-Like most `CommandBus` implementations, the `SimpleCommandBus` allows interceptors to be configured. `CommandDispatchInterceptor`s are invoked when a command is dispatched on the Command Bus. The `CommandHandlerInterceptor`s are invoked before the actual command handler method is, allowing you to do modify or block the command. See [Command Interceptors](#command-interceptors) for more information.
+像大多数`CommandBus`实现一样，`SimpleCommandBus`允许配置拦截器。 在命令总线上分派命令时调用CommandDispatchInterceptor。 CommandHandlerInterceptor在实际的命令处理器方法之前被调用，允许你修改或阻止命令。 有关更多信息，请参见[命令拦截器]（＃命令拦截器）。
 
-Since all command processing is done in the same thread, this implementation is limited to the JVM's boundaries. The performance of this implementation is good, but not extraordinary. To cross JVM boundaries, or to get the most out of your CPU cycles, check out the other `CommandBus` implementations.
+由于所有命令处理都在同一个线程中完成，因此此实现仅限于JVM的边界。 这种实施的表现很好，但并不特别。 要跨越JVM边界，或为了充分利用CPU周期，请查看其他`CommandBus`实现。
 
 AsynchronousCommandBus
 ----------------------
 
-As the name suggest, the `AsynchronousCommandBus` implementation executes Commands asynchronously from the thread that dispatches them. It uses an Executor to perform the actual handling logic on a different Thread.
+顾名思义，`AsynchronousCommandBus`实现从调度它们的线程异步执行Commands。 它使用Executor在不同的Thread上执行实际的处理逻辑。
 
-By default, the `AsynchronousCommandBus` uses an unbounded cached thread pool. This means a thread is created when a Command is dispatched. Threads that have finished processing a Command are reused for new commands. Threads are stopped if they haven't processed a command for 60 seconds.
+默认情况下，`AsynchronousCommandBus`使用无限制的缓存线程池。 这意味着一个线程在分派Command时被创建。 已完成处理命令的线程将重新用于新命令。 如果线程没有处理60秒的命令，线程将被停止。
 
-Alternatively, an `Executor` instance may be provided to configure a different threading strategy.
+或者，可以提供“Executor”实例来配置不同的线程策略。
 
-Note that the `AsynchronousCommandBus` should be shut down when stopping the application, to make sure any waiting threads are properly shut down. To shut down, call the `shutdown()` method. This will also shutdown any provided `Executor` instance, if it implements the `ExecutorService` interface.
+请注意，应该在停止应用程序时关闭“AsynchronousCommandBus”，以确保任何等待的线程都已正确关闭。 要关闭，请调用`shutdown（）`方法。 如果它实现了`ExecutorService`接口，它也会关闭任何提供的`Executor`实例。
 
 DisruptorCommandBus
 -------------------
 
-The `SimpleCommandBus` has reasonable performance characteristics, especially when you've gone through the performance tips in [Performance Tuning](../part4/performance-tuning.md#performance-tuning). The fact that the `SimpleCommandBus` needs locking to prevent multiple threads from concurrently accessing the same aggregate causes processing overhead and lock contention.
+`SimpleCommandBus`具有合理的性能特征，尤其是当您在[性能调优]（../ part4 / performance-tuning.md＃performance-tuning）中查看性能提示时。 SimpleCommandBus需要锁定以防止多个线程同时访问同一个聚合的事实会导致处理开销和锁定争用。
 
-The `DisruptorCommandBus` takes a different approach to multithreaded processing. Instead of having multiple threads each doing the same process, there are multiple threads, each taking care of a piece of the process. The `DisruptorCommandBus` uses the Disruptor (<http://lmax-exchange.github.io/disruptor/>), a small framework for concurrent programming, to achieve much better performance, by just taking a different approach to multi-threading. Instead of doing the processing in the calling thread, the tasks are handed off to two groups of threads, that each take care of a part of the processing. The first group of threads will execute the command handler, changing an aggregate's state. The second group will store and publish the events to the Event Store.
+DisruptorCommandBus采用不同的方法来执行多线程处理。 不是每个进程使用多个线程，而是有多个线程，每个线程负责处理一部分进程。 DisruptorCommandBus使用Disruptor（<http://lmax-exchange.github.io/disruptor/>）这个小型的并发编程框架，通过采用不同的多线程方法来获得更好的性能。 不是在调用线程中进行处理，而是将任务交给两组线程，每个线程都负责处理一部分处理。 第一组线程将执行命令处理程序，更改聚合的状态。 第二组将存储事件并将其发布到事件存储。
 
-While the `DisruptorCommandBus` easily outperforms the `SimpleCommandBus` by a factor of 4(!), there are a few limitations:
+虽然`DisruptorCommandBus`很容易比'SimpleCommandBus`高出4倍（！），但有一些限制：
 
--   The `DisruptorCommandBus` only supports Event Sourced Aggregates. This Command Bus also acts as a Repository for the aggregates processed by the Disruptor. To get a reference to the Repository, use `createRepository(AggregateFactory)`.
+-   DisruptorCommandBus只支持事件源聚合。 该命令总线还充当Disruptor处理的聚合的存储库。 要获得对存储库的引用，请使用`createRepository（AggregateFactory）`。
 
--   A Command can only result in a state change in a single aggregate instance.
+-   命令只能导致单个聚合实例中的状态更改。
 
--   When using a Cache, it allows only a single aggregate for a given identifier. This means it is not possible to have two aggregates of different types with the same identifier.
+-   使用缓存时，它只允许给定标识符的单个聚合。 这意味着不可能有两个具有相同标识符的不同类型的聚合体。
 
--   Commands should generally not cause a failure that requires a rollback of the Unit of Work. When a rollback occurs, the `DisruptorCommandBus` cannot guarantee that Commands are processed in the order they were dispatched. Furthermore, it requires a retry of a number of other commands, causing unnecessary computations.
+-   命令通常不会导致需要回滚工作单元的故障。 发生回滚时，DisruptorCommandBus不能保证命令按照它们的分派顺序进行处理。 此外，它需要重试其他许多命令，导致不必要的计算。
 
--   When creating a new Aggregate Instance, commands updating that created instance may not all happen in the exact order as provided. Once the aggregate is created, all commands will be executed exactly in the order they were dispatched. To ensure the order, use a callback on the creating command to wait for the aggregate being created. It shouldn't take more than a few milliseconds.
+-   在创建新的聚合实例时，更新创建实例的命令可能并不全都按照提供的顺序发生。 一旦创建了聚合，所有的命令将按照它们被调度的顺序执行。 为了确保顺序，在创建命令上使用回调来等待创建的聚合。 它不应该超过几毫秒。
 
 To construct a `DisruptorCommandBus` instance, you need an `EventStore`. This component is explained in [Repositories and Event Stores](repositories-and-event-stores.md).
 
