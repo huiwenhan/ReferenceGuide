@@ -222,40 +222,40 @@ Handler Interceptors are also typically used to manage transactions around the h
 Distributing the Command Bus
 ============================
 
-The CommandBus implementations described in earlier only allow Command Messages to be dispatched within a single JVM. Sometimes, you want multiple instances of Command Buses in different JVMs to act as one. Commands dispatched on one JVM's Command Bus should be seamlessly transported to a Command Handler in another JVM while sending back any results.
+前面描述的CommandBus实现只允许在单个JVM中分派命令消息。 有时，您需要不同JVM中的多个Command Buses实例作为一个实例。 在一个JVM的Command Bus上调度的命令应该无缝地传送到另一个JVM中的Command Handler，同时发回任何结果。
 
-That's where the `DistributedCommandBus` comes in. Unlike the other `CommandBus` implementations, the `DistributedCommandBus` does not invoke any handlers at all. All it does is form a "bridge" between Command Bus implementations on different JVM's. Each instance of the `DistributedCommandBus` on each JVM is called a "Segment".
+这就是DistributedCommandBus的功能。与其他CommandBus实现不同，DistributedCommandBus根本不调用任何处理程序。 它所做的只是在不同JVM上的命令总线实现之间形成一个“桥梁”。 每个JVM上的每个DistributedCommandBus实例称为“Segment”。
 
 ![Structure of the Distributed Command Bus](distributed-command-bus.png)
 
 > **Note**
 >
-> While the distributed command bus itself is part of the Axon Framework Core module, it requires components that you can find in one of the *axon-distributed-commandbus-...* modules. If you use Maven, make sure you have the appropriate dependencies set. The groupId and version are identical to those of the Core module.
+> 尽管分布式命令总线本身是Axon Framework Core模块的一部分，但它需要可以在* axon-distributed-commandbus -... *模块之一中找到的组件。 如果您使用Maven，请确保您已设置适当的依赖关系。 groupId和版本与Core模块的相同。
 
-The `DistributedCommandBus` relies on two components: a `CommandBusConnector`, which implements the communication protocol between the JVM's, and the `CommandRouter`, which chooses a destination for each incoming Command. This Router defines which segment of the Distributed Command Bus should be given a Command, based on a Routing Key calculated by a Routing Strategy. Two commands with the same Routing Key will always be routed to the same segment, as long as there is no change in the number and configuration of the segments. Generally, the identifier of the targeted aggregate is used as a routing key.
+'DistributedCommandBus` 依赖于两个组件：CommandBusConnector，它实现JVM和CommandRouter之间的通信协议，CommandRouter为每个传入的Command选择一个目的地。 该路由器基于由路由策略计算的路由密钥来定义应该给予分布式命令总线的哪个段。 具有相同路由密钥的两个命令将始终路由到相同的网段，只要网段的数量和配置没有变化。 通常，目标聚合的标识符被用作路由密钥。
 
-Two implementations of the `RoutingStrategy` are provided: the `MetaDataRoutingStrategy`, which uses a Meta Data property in the Command Message to find the routing key, and the `AnnotationRoutingStrategy`, which uses the `@TargetAggregateIdentifier` annotation on the Command Messages payload to extract the Routing Key. Obviously, you can also provide your own implementation.
+提供了两个`RoutingStrategy`实现：`MetaDataRoutingStrategy`，它使用命令消息中的元数据属性来查找路由关键字，以及`AnnotationRoutingStrategy`，它在命令消息有效载荷上使用`@ TargetAggregateIdentifier`注释 提取路由密钥。 显然，你也可以提供你自己的实现。
 
-By default, the RoutingStrategy implementations will throw an exception when no key can be resolved from a Command Message. This behavior can be altered by providing a UnresolvedRoutingKeyPolicy in the constructor of the MetaDataRoutingStrategy or AnnotationRoutingStrategy. There are three possible policies:
+默认情况下，如果没有密钥可以从命令消息中解析，则RoutingStrategy实现将引发异常。 通过在MetaDataRoutingStrategy或AnnotationRoutingStrategy的构造函数中提供UnresolvedRoutingKeyPolicy，可以更改此行为。 有三种可能的政策：
 
--   ERROR: This is the default, and will cause an exception to be thrown when a Routing Key is not available
+-   Error：这是默认设置，当路由密钥不可用时将引发异常
 
--   RANDOM\_KEY: Will return a random value when a Routing Key cannot be resolved from the Command Message. This effectively means that those commands will be routed to a random segment of the Command Bus.
+-   RANDOM\_KEY:当无法从命令消息解析路由密钥时，将返回一个随机值。 这实际上意味着这些命令将被路由到命令总线的随机段。
 
--   STATIC\_KEY: Will return a static key (being "unresolved") for unresolved Routing Keys. This effectively means that all those commands will be routed to the same segment, as long as the configuration of segments does not change.
+-   STATIC\_KEY: 将为未解决的路由密钥返回一个静态密钥（“未解析”）。 这实际上意味着只要段的配置没有改变，所有这些命令将被路由到相同的段。
 
 JGroupsConnector
 ----------------
 
-The `JGroupsConnector` uses (as the name already gives away) JGroups as the underlying discovery and dispatching mechanism. Describing the feature set of JGroups is a bit too much for this reference guide, so please refer to the [JGroups User Guide](http://www.jgroups.org/ug.html) for more details.
+'JGroupsConnector`使用JGroups作为基础的发现和调度机制（作为名称已经提供）。 描述JGroups的功能集对于本参考指南来说有点太过分了，所以请参阅[JGroups用户指南]（http://www.jgroups.org/ug.html）了解更多详情。
 
-Since JGroups handles both discovery of nodes and the communication between them, the `JGroupsConnector` acts as both a `CommandBusConnector` and a `CommandRouter`.
+由于JGroups同时处理发现节点和它们之间的通信，所以'JGroupsConnector`既充当CommandBusConnector又充当CommandRouter。
 
 > **Note**
 > 
-> You can find the JGroups specific components for the `DistributedCommandBus` in the `axon-distributed-commandbus-jgroups` module.
+> 您可以在'axon-distributed-commandbus-jgroups`模块中找到JGroups的`DistributedCommandBus`特定组件。
 
-The JGroupsConnector has four mandatory configuration elements:
+JGroupsConnector有四个强制配置元素：
 
 -   The first is a JChannel, which defines the JGroups protocol stack. Generally, a JChannel is constructed with a reference to a JGroups configuration file. JGroups comes with a number of default configurations which can be used as a basis for your own configuration. Do keep in mind that IP Multicast generally doesn't work in Cloud Services, like Amazon. TCP Gossip is generally a good start in such type of environment.
 
@@ -301,15 +301,15 @@ If you use Spring, you may want to consider using the `JGroupsConnectorFactoryBe
 Spring Cloud Connector
 ----------------------
 
-The Spring Cloud Connector setup uses the service registration and discovery mechanism described by [Spring Cloud](http://projects.spring.io/spring-cloud/) for distributing the Command Bus. You are thus left free to choose which Spring Cloud implementation to use to distribute your commands. An example implementations is the Eureka Discovery/Eureka Server combination.
+Spring Cloud Connector安装使用[Spring Cloud]（http://projects.spring.io/spring-cloud/）中描述的服务注册和发现机制来分发命令总线。 因此，您可以自由选择使用哪种Spring Cloud实现来分发您的命令。 示例实现是Eureka Discovery / Eureka服务器组合。
  
  > **Note**
  >
- > The `SpringCloudCommandRouter` uses the Spring Cloud specific `ServiceInstance.Metadata` field to inform all the nodes in the system of its message routing information. It is thus of importance that the Spring Cloud implementation selected supports the usage of the `ServiceInstance.Metadata` field. If the desired Spring Cloud implementation does not support the modification of the `ServiceInstance.Metadata` (e.g. Consul), the `SpringCloudHttpBackupCommandRouter` is a viable solution. See the end of this chapter for configuration specifics on the `SpringCloudHttpBackupCommandRouter`. 
+ > `SpringCloudCommandRouter`使用Spring Cloud特定的`ServiceInstance.Metadata`字段来通知系统中所有节点的消息路由信息。 因此选择的Spring Cloud实现支持使用'ServiceInstance.Metadata`字段非常重要。 如果所需的Spring Cloud实现不支持修改`ServiceInstance.Metadata`（例如Consul），`SpringCloudHttpBackupCommandRouter`是一个可行的解决方案。 有关`SpringCloudHttpBackupCommandRouter`的配置细节，请参阅本章末尾的内容。
 
-Giving a description of every Spring Cloud implementation would push this reference guide to far. Hence we refer to their respective documentations for further information.
+对每个Spring Cloud实现进行描述将推动本参考指南的实现。 因此，我们参考他们各自的文件获取更多信息。
 
-The Spring Cloud Connector setup is a combination of the `SpringCloudCommandRouter` and a `SpringHttpCommandBusConnector`, which respectively fill the place of the `CommandRouter` and the `CommandBusConnector` for the `DistributedCommandBus`.
+Spring Cloud Connector安装程序是`SpringCloudCommandRouter`和`SpringHttpCommandBusConnector`的组合，它们分别为`DistributedCommandBus`填充`CommandRouter`和`CommandBusConnector`的位置。
 
 > **Note**
 >
