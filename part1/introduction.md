@@ -26,11 +26,11 @@ Since CQRS is fundamentally different than the layered-architecture which domina
 What is Axon?
 -------------
 
-Axon Framework helps build scalable, extensible and maintainable applications by supporting developers apply the Command Query Responsibility Segregation (CQRS) architectural pattern. It does so by providing implementations of the most important building blocks, such as aggregates, repositories and event buses (the dispatching mechanism for events). Furthermore, Axon provides annotation support, which allows you to build aggregates and event listeners without tying your code to Axon specific logic. This allows you to focus on your business logic, instead of the plumbing, and helps you to make your code easier to test in isolation.
+通过支持开发人员应用命令查询责任分离（CQRS）体系结构模式，Axon Framework可帮助构建可扩展，可扩展和可维护的应用程序。 它通过提供最重要构建块的实现来实现，如聚合，存储库和事件总线（事件的调度机制）。 此外，Axon提供了注释支持，允许您构建聚集和事件侦听器，而无需将代码绑定到Axon特定的逻辑。 这使您可以专注于业务逻辑而不是管道，并帮助您使代码更容易独立测试。
 
-Axon does not, in any way, try to hide the CQRS architecture or any of its components from developers. Therefore, depending on team size, it is still advisable to have one or more developers with a thorough understanding of CQRS on each team. However, Axon does help when it comes to guaranteeing delivering events to the right event listeners and processing them concurrently and in the correct order. These multi-threading concerns are typically hard to deal with, leading to hard-to-trace bugs and sometimes complete application failure. When you have a tight deadline, you probably don't even want to care about these concerns. Axon's code is thoroughly tested to prevent these types of bugs.
+Axon并不以任何方式试图隐藏开发人员的CQRS架构或其任何组件。 因此，根据团队规模，建议一个或多个开发人员全面了解每个团队的CQRS。 然而，Axon在确保将事件传递给正确的事件侦听器并按照正确的顺序同时处理它们方面提供了帮助。 这些多线程问题通常很难处理，导致难以跟踪的错误，有时会导致应用程序完全失败。 当你有紧迫的期限时，你可能甚至不想关心这些问题。 Axon的代码已经过彻底测试，可以防止这些类型的错误。
 
-The Axon Framework consists of a number of modules (jars) that provide the tools and components to build a scalable infrastructure. The Axon Core module provides the basic APIs for the different components, and simple implementations that provide solutions for single-JVM applications. The other modules address scalability or high-performance issues, by providing specialized building blocks.
+Axon框架由许多模块（罐子）组成，这些模块提供了构建可扩展基础架构的工具和组件。 Axon核心模块为不同组件提供基本的API，以及为单个JVM应用程序提供解决方案的简单实现。 其他模块通过提供专门的构建模块来解决可伸缩性或高性能问题。
 
 When to use Axon?
 -----------------
