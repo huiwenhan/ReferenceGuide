@@ -1,35 +1,35 @@
 Messaging concepts
 ==================
 
-One of the core concepts in Axon is messaging. All communication between components is done using message objects. This gives these components the location transparency needed to be able to scale and distribute these components when necessary.
+Axon的核心概念之一就是消息 组件之间的所有通信都使用消息对象完成。 这为这些组件提供了所需的位置透明度，以便在必要时扩展和分配这些组件。
 
-Although all these messages implement the `Message` interface, there is a clear distinction between the different types of Messages and how they are treated.
+尽管所有这些消息都实现了“消息”接口，但不同类型的消息之间有明显的区别，以及它们是如何处理的。
 
-All Messages contain a payload, meta data and unique identifier. The payload of the message is the functional description of what the message means. The combination of the class name of this object and the data it carries, describe the application's meaning of the message. The meta data allows you to describe the context in which a message is being sent. You can, for example, store tracing information, to allow the origin or cause of messages to be tracked. You can also store information to describe the security context under which a command is being executed.
+所有消息都包含有效负载，元数据和唯一标识符。 消息的有效载荷是消息含义的功能描述。 该对象的类名和它携带的数据的组合描述了应用程序的消息含义。 元数据允许您描述邮件发送的上下文。 例如，您可以存储跟踪信息，以便跟踪消息的来源或原因。 您还可以存储信息来描述正在执行命令的安全上下文。
 
 > **Note**
 >
-> Note that all Messages are immutable. Storing data in a Message actually means creating a new Message based on the previous one, with extra information added to it. This guarantees that Messages are safe to use in a multi-threaded and distributed environment.
+> 请注意，所有消息都是不可变的。 将数据存储在消息中实际上意味着根据前一个消息创建一个新消息，并添加额外的信息。 这保证了消息可以安全地在多线程和分布式环境中使用。
 
 Commands
 --------
 
-Commands describe an intent to change the application's state. They are implemented as (preferably read-only) POJOs that are wrapped using one of the `CommandMessage` implementations.
+命令描述了改变应用程序状态的意图。 它们被实现为（最好是只读的）使用CommandMessage实现包装的POJO。
 
-Commands always have exactly one destination. While the sender doesn't care which component handles the command or where that component resides, it may be interesting in knowing the outcome of it. That's why Command messages sent over the Command Bus allow for a result to be returned.
+命令总是只有一个目的地。 虽然发件人并不关心哪个组件处理命令或组件驻留的位置，但知道它的结果可能很有趣。 这就是为什么通过命令总线发送的命令消息允许返回结果的原因。
 
 Events
 ------
 
-Events are objects that describe something that has occurred in the application. A typical source of Events is the Aggregate. When something important has occurred within the Aggregate, it will raise an Event. In Axon Framework, Events can be any object. You are highly encouraged to make sure all Events are serializable.
+事件是描述应用程序中发生的事件的对象。 事件的典型来源是聚合。 在Aggregate内发生重要事件时，它将引发一个事件。 在Axon Framework中，事件可以是任何对象。 强烈建议您确保所有事件都是可序列化的。
 
-When Events are dispatched, Axon wraps them in an `EventMessage`. The actual type of Message used depends on the origin of the Event. When an Event is raised by an Aggregate, it is wrapped in a `DomainEventMessage` (which extends `EventMessage`). All other Events are wrapped in an `EventMessage.` Aside from common `Message` attributes like a unique Identifier an `EventMessage` also contains a timestamp. The `DomainEventMessage` additionally contains the type and identifier of the aggregate that raised the Event. It also contains the sequence number of the event in the aggregate's event stream, which allows the order of events to be reproduced.
+当事件分派时，Axon将它们包装在一个`EventMessage`中。 使用的消息的实际类型取决于事件的来源。 当一个事件由一个Aggregate引发时，它被包装在一个`DomainEventMessage`中（它扩展了`EventMessage`）。 所有其他事件都包含在一个`EventMessage.`中。除了常见的`Message`属性，如唯一的标识符，`EventMessage`还包含一个时间戳。 “DomainEventMessage”还包含引发该事件的聚合的类型和标识符。 它还包含聚集事件流中事件的序列号，它允许重现事件的顺序。
 
 > **Note**
 >
-> Even though the `DomainEventMessage` contains a reference to the Aggregate Identifier, you should always include the identifier in the actual Event itself as well. The identifier in the DomainEventMessage is used by the EventStore to store events and may not always provide a reliable value for other purposes.
+> 即使`DomainEventMessage`包含对Aggregate Identifier的引用，您也应始终在实际的Event中包含标识符。 EventStore使用DomainEventMessage中的标识符来存储事件，并不总是为其他目的提供可靠的值。
 
-The original Event object is stored as the Payload of an EventMessage. Next to the payload, you can store information in the Meta Data of an Event Message. The intent of the Meta Data is to store additional information about an Event that is not primarily intended as business information. Auditing information is a typical example. It allows you to see under which circumstances an Event was raised, such as the User Account that triggered the processing, or the name of the machine that processed the Event.
+原始的Event对象存储为EventMessage的Payload。 在有效负载旁边，您可以将信息存储在事件消息的元数据中。 元数据的目的是存储有关事件的附加信息，该事件主要不是作为商业信息。 审计信息就是一个典型的例子。 它允许您查看在哪些情况下引发了事件，例如触发处理的用户帐户或处理该事件的计算机的名称。
 
 > **Note**
 >
