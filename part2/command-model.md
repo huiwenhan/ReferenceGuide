@@ -1,48 +1,48 @@
 Command Model
 ===============
 
-In a CQRS-based application, a Domain Model (as defined by Eric Evans and Martin Fowler) can be a very powerful mechanism to harness the complexity involved in the validation and execution of state changes. Although a typical Domain Model has a great number of building blocks, one of them plays a dominant role when applied to Command processing in CQRS: the Aggregate.
+在基于CQRS的应用程序中，领域模型（如Eric Evans和Martin Fowler所定义的）可以是一个非常强大的机制，用于处理状态更改验证和执行过程中涉及的复杂性。 虽然典型的领域模型有大量的构建块，但是其中一个在应用于CQRS中的命令处理时扮演主导角色：聚合。
 
-A state change within an application starts with a Command. A Command is a combination of expressed intent (which describes what you want done) as well as the information required to undertake action based on that intent. The Command Model is used to process the incoming command, to validate it and define the outcome. Within this model, a Command Handler is responsible for handling commands of a certain type and taking action based on the information contained inside it.
+应用程序中的状态更改以Command开头。 命令是表达意图的组合（它描述了你想要做什么）以及基于该意图采取行动所需的信息。 命令模型用于处理传入的命令，以验证它并定义结果。 在这个模型中，一个Command Handler负责处理某种类型的命令，并根据其中包含的信息采取行动。
 
 Aggregate
 ---------
-An Aggregate is an entity or group of entities that is always kept in a consistent state. The Aggregate Root is the object on top of the aggregate tree that is responsible for maintaining this consistent state. This makes the Aggregate the prime building block for implementing a Command Model in any CQRS based application.
+聚合是始终保持一致状态的实体或实体组。 聚集根是负责维护此一致状态的聚合树顶部的对象。 这使得Aggregate成为在任何基于CQRS的应用程序中实现命令模型的主要构建模块。
 
 > **Note**
 >
-> The term "Aggregate" refers to the aggregate as defined by Evans in Domain Driven Design:
+> 术语“聚合”是指Evans在域驱动设计中定义的集合：
 >
-> “A cluster of associated objects that are treated as a unit for the purpose of data changes. External references are restricted to one member of the Aggregate, designated as the root. A set of consistency rules applies within the Aggregate's boundaries.”
+> “一组关联对象，作为数据更改目的的单位。 外部引用仅限于Aggregate的一个成员，被指定为根。 一组一致性规则适用于Aggregate的边界内。“
 
-For example, a "Contact" aggregate could contain two entities: Contact and Address. To keep the entire aggregate in a consistent state, adding an address to a contact should be done via the Contact entity. In this case, the Contact entity is the appointed aggregate root.
+例如，“联系人”聚合可以包含两个实体：联系人和地址。 为了保持整个聚合状态一致，向联系人添加地址应通过联系人实体完成。 在这种情况下，联系人实体是指定的聚合根。
 
-In Axon, aggregates are identified by an Aggregate Identifier. This may be any object, but there are a few guidelines for good implementations of identifiers. Identifiers must:
+在Axon中，聚合由一个聚合标识标识。 这可能是任何对象，但是对于标识符的良好实现有几条准则。 标识符必须：
 
--   implement `equals` and `hashCode` to ensure good equality comparison with other instances,
+-  实现`equals`和`hashCode`确保与其他实例进行良好的平等比较，
 
--   implement a `toString()` method that provides a consistent result (equal identifiers should provide an equal toString() result), and
+-   实现一个提供一致结果的`toString（）`方法（相同的标识符应该提供一个相等的toString（）结果），以及
 
--   preferably be `Serializable`.
+-   最好是`Serializable`。
 
-The test fixtures (see [Testing](testing.md)) will verify these conditions and fail a test when an Aggregate uses an incompatible identifier. Identifiers of type `String`, `UUID` and the numeric types are always suitable. Do **not** use primitive types as identifiers, as they don't allow for lazy initialization. Axon may, in some circumstances, falsely assume the default value of a primitive to be the value of the identifier.
+测试fixtures（参见[Testing]（testing.md））将验证这些条件，并在Aggregate使用不兼容的标识符时通过测试。 “String”，“UUID”和数字类型的标识符总是合适的。 Do ** not ** 使用原始类型作为标识符，因为它们不允许延迟初始化。 在某些情况下，Axon可能会错误地将基元的默认值假定为标识符的值。
 
 > **Note**
 >
-> It is considered a good practice to use randomly generated identifiers, as opposed to sequenced ones. Using a sequence drastically reduces scalability of your application, since machines need to keep each other up-to-date of the last used sequence numbers. The chance of collisions with a UUID is very slim (a chance of 10<sup>−15</sup>, if you generate 8.2 × 10 <sup>11</sup> UUIDs).
+> 使用随机生成的标识符被认为是一个好习惯，而不是按顺序标识符。 使用序列会大大降低应用程序的可伸缩性，因为机器需要互相保持最新使用的序列号的最新版本。 与UUID碰撞的几率很小（如果生成8.2×10 <11> </ sup> UUID，则机会为10 <-15 </ sup>）。
 >
-> Furthermore, be careful when using functional identifiers for aggregates. They have a tendency to change, making it very hard to adapt your application accordingly.
+> 此外，在为聚合使用功能标识符时要小心。 他们有改变的趋势，因此很难相应地调整你的应用程序。
 
 Aggregate implementations
 -------------------------
-An Aggregate is always accessed through a single Entity, called the Aggregate Root. Usually, the name of this Entity is the same as that of the Aggregate entirely. For example, an Order Aggregate may consist of an Order entity, which references several OrderLine entities. Order and Orderline together, form the Aggregate.
+一个聚合总是通过一个称为聚合根的实体来访问。 通常，该实体的名称与聚合的名称完全相同。 例如，一个订单集合可以由一个订单实体组成，该实体引用多个订单行实体。 订单和订单一起，形成总和。
 
-An Aggregate is a regular object, which contains state and methods to alter that state. Although not entirely correct according to CQRS principles, it is also possible to expose the state of the aggregate through accessor methods.
+聚集是一个常规的对象，它包含改变状态的状态和方法。 虽然根据CQRS原则不完全正确，但也可以通过访问器方法公开聚合的状态。
 
-An Aggregate Root must declare a field that contains the Aggregate identifier. This identifier must be initialized at the latest when the first Event is published. This identifier field must be annotated by the `@AggregateIdentifier` annotation.
-If you use JPA and have JPA annotations on the aggregate, Axon can also use the `@Id` annotation provided by JPA.
+聚合根必须声明包含聚合标识符的字段。 该标识符必须在第一个事件发布时最迟被初始化。 该标识符字段必须由“@ AggregateIdentifier”注释注释。
+如果您使用JPA并在聚合上使用JPA批注，则Axon也可以使用JPA提供的“@ Id”批注。
 
-Aggregates may use the `AggregateLifecycle.apply()` method to register events for publication. Unlike the `EventBus`, where messages need to be wrapped in an EventMessage, `apply()` allows you to pass in the payload object directly.
+聚合可以使用`AggregateLifecycle.apply（）`方法来注册要发布的事件。 与'EventBus`不同的是，消息需要被包装在一个EventMessage中，'apply（）`允许你直接传递有效载荷对象。
 
 ``` java
 import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
@@ -67,17 +67,17 @@ public class MyAggregate {
 }
 ```
 
-Entities within an Aggregate can listen to the events the Aggregate publishes, by defining an `@EventHandler` annotated method. These methods will be invoked when an EventMessage is published (before any external handlers are published).
+通过定义一个`@ EventHandler`注释的方法，一个Aggregate中的实体可以监听Aggregate发布的事件。 当发布EventMessage时（在任何外部处理程序发布之前），将调用这些方法。
 
 Event sourced aggregates
 ------------------------
-Besides storing the current state of an Aggregate, it is also possible to rebuild the state of an Aggregate based on the Events that it has published in the past. For this to work, all state changes must be represented by an Event.
+除了存储Aggregate的当前状态之外，还可以根据它过去发布的Events来重建Aggregate的状态。 为了这个工作，所有的状态改变必须由一个Event来表示。
 
-For the major part, Event Sourced Aggregates are similar to 'regular' aggregates: they must declare an identifier and can use the `apply` method to publish Events. However, state changes in Event Sourced Aggregates (i.e. any change of a Field value) must be *exclusively* performed in an `@EventSourcingHandler` annotated method. This includes setting the Aggregate Identifier.
+对于主要部分来说，事件溯源聚合类似于'常规'聚合：它们必须声明一个标识符并且可以使用`apply`方法来发布事件。 但是，事件溯源聚合中的状态更改（即字段值的任何更改）必须*独占*在`@ EventSourcingHandler`注释方法中执行。 这包括设置聚合标识符。
 
-Note that the Aggregate Identifier must be set in the `@EventSourcingHandler` of the very first Event published by the Aggregate. This is usually the creation Event.
+请注意，聚合标识符必须在聚合发布的第一个事件的“@ EventSourcingHandler”中设置。 这通常是创建事件。
 
-The Aggregate Root of an Event Sourced Aggregate must also contain a no-arg constructor. Axon Framework uses this constructor to create an empty Aggregate instance before initializing it using past Events. Failure to provide this constructor will result in an Exception when loading the Aggregate.
+源事件的聚合根源也必须包含无参数构造函数。 Axon Framework使用此构造函数在使用过去的事件初始化它之前创建一个空的Aggregate实例。 加载聚合时，未能提供此构造函数将导致异常。
 
 ``` java
 public class MyAggregateRoot {
@@ -106,52 +106,52 @@ public class MyAggregateRoot {
 }                
 ```
 
-`@EventSourcingHandler` annotated methods are resolved using specific rules. These rules are the same for the `@EventHandler` annotated methods, and are thoroughly explained in [Annotated Event Handler](./event-handling.md#defining-event-handlers).
+使用特定规则解决`@ EventSourcingHandler`注释的方法。 这些规则与`@ EventHandler`注释方法相同，在[Annotated Event Handler]（./ event-handling.md#definition-event-handlers）中有详细解释。
 
 > **Note**
 >
-> Event handler methods may be private, as long as the security settings of the JVM allow the Axon Framework to change the accessibility of the method. This allows you to clearly separate the public API of your aggregate, which exposes the methods that generate events, from the internal logic, which processes the events.
+>事件处理程序方法可以是私有的，只要JVM的安全设置允许Axon框架更改方法的可访问性即可。 这使您可以清楚地将聚合的公共API（公开生成事件的方法）与处理事件的内部逻辑分开。
 >
-> Most IDE's have an option to ignore "unused private method" warnings for methods with a specific annotation. Alternatively, you can add an `@SuppressWarnings("UnusedDeclaration")` annotation to the method to make sure you don't accidentally delete an Event handler method.
+> 大多数IDE都可以选择忽略具有特定注释的方法的“未使用私有方法”警告。 或者，您可以向该方法添加一个@SuppressWarnings（“UnusedDeclaration”）注释，以确保您不会意外删除事件处理程序方法。
 
-In some cases, especially when aggregate structures grow beyond just a couple of entities, it is cleaner to react on events being published in other entities of the same aggregate. However, since Event Handler methods are also invoked when reconstructing aggregate state, special precautions must be taken.
+在某些情况下，特别是当聚合结构增长超出一些实体时，对于在同一聚合的其他实体中发布的事件的反应更为清晰。 但是，由于在重新构建聚合状态时也会调用事件处理程序方法，因此必须采取特殊的预防措施。
 
-It is possible to `apply()` new events inside an Event Sourcing Handler method. This makes it possible for an Entity B to apply an event in reaction to Entity A doing something. Axon will ignore the apply() invocation when replaying historic events. Do note that, in this case, the Event of the inner `apply()` invocation is only published to the Entities after all Entities have received the first Event. If more events need to be published, based on the state of an entity after applying an inner event, use `apply(...).andThenApply(...)`
+可以在Event Sourcing Handler方法中 ` apply（）` 新事件。 这使得实体B可以应用事件来响应实体A做某事。 重放历史事件时，Axon将忽略apply（）调用。 请注意，在这种情况下，在所有实体接收到第一个事件后，内部`apply（）`调用的事件仅发布给实体。 如果需要发布更多事件，根据应用内部事件后的实体状态，使用`apply（...）。和ThenApply（...）`
 
-You can also use the static `AggregateLifecycle.isLive()` method to check whether the aggregate is 'live'. Basically, an aggregate is considered live if it has finished replaying historic events. While replaying these events, isLive() will return false. Using this `isLive()` method, you can perform activity that should only be done when handling newly generated events.
+你也可以使用静态的`AggregateLifecycle.isLive（）`方法来检查聚合是否是'活的'。 基本上，如果聚合完成重放历史事件，则视为聚合。 在重播这些事件时，isLive（）将返回false。 使用这个`isLive（）`方法，您可以执行仅在处理新生成的事件时完成的活动。
 
 Complex Aggregate structures
 ----------------------------
-Complex business logic often requires more than what an aggregate with only an aggregate root can provide. In that case, it is important that the complexity is spread over a number of entities within the aggregate. When using event sourcing, not only the aggregate root needs to use events to trigger state transitions, but so does each of the entities within that aggregate.
+复杂的业务逻辑通常需要的不仅仅是聚合根可以提供的聚合。 在这种情况下，将复杂性分散到聚合中的许多实体是很重要的。 在使用事件溯源时，不仅聚合根需要使用事件来触发状态转换，而且聚合中的每个实体也是如此。
 
 > ** Note **
-> A common misinterpretation of the rule that Aggregates should not expose state is that none of the Entities should contain any property accessor methods. This is not the case. In fact, an Aggregate will probably benefit a lot if the entities *within* the aggregate expose state to the other entities in that same aggregate. However, is is recommended not to expose the state *outside* of the Aggregate.
+> 对Aggregates不应该暴露状态的规则的常见误解是没有任何实体应该包含任何属性访问器方法。 不是这种情况。 事实上，如果聚合中的实体 *within* 在同一总量中向其他实体公开状态，则聚合可能会受益匪浅。 但是，建议不要暴露Aggregate的状态 *outside* 。
 
-Axon provides support for event sourcing in complex aggregate structures. Entities are, just like the Aggregate Root, simple objects. The field that declares the child entity must be annotated with `@AggregateMember`. This annotation tells Axon that the annotated field contains a class that should be inspected for Command and Event Handlers.
+Axon为复杂聚合结构中的事件溯源提供支持。 实体像聚合根一样是简单的对象。 声明子实体的字段必须用`@ AggregateMember`注释。 此注释告诉Axon注释的字段包含应该检查命令和事件处理程序的类。
 
-When an Entity (including the Aggregate Root) applies an Event, it is handled by the Aggregate Root first, and then bubbles down through all `@AggregateMember` annotated fields to its child entities.
+当实体（包括聚合根）应用事件时，首先由聚合根处理，然后通过所有带有@ @ AggregateMember注释的字段向其子实体下泡。
 
-Fields that (may) contain child entities must be annotated with `@AggregateMember`. This annotation may be used on a number of field types:
+（可能）包含子实体的字段必须用@ @ AggregateMember注解。 此注释可用于多种字段类型：
 
--   the Entity Type, directly referenced in a field;
+-  实体类型，在字段中直接引用;
 
--   inside fields containing an `Iterable` (which includes all collections, such as `Set`, `List`, etc);
+-  包含`Iterable`（其中包括所有集合，例如`Set`，`List`等）的内部字段;
 
--   inside the values of fields containing a `java.util.Map`
+-  在包含`java.util.Map`的字段的值内
 
 ### Handling commands in an Aggregate
 
-It is recommended to define the Command Handlers directly in the Aggregate that contains the state to process this command, as it is not unlikely that a command handler needs the state of that Aggregate to do its job. 
+建议直接在包含处理此命令的状态的聚合中定义命令处理程序，因为命令处理程序不需要该聚合的状态来完成其工作。
 
-To define a Command Handler in an Aggregate, simply annotate the Command Handling method with `@CommandHandler`. The rules for an `@CommandHandler` annotated method are the same as for any handler method. However, Commands are not only routed by their payload. Command Messages carry a name, which defaults to the fully qualified class name of the Command object.
+要在Aggregate中定义Command Handler，只需使用`@ CommandHandler`注释命令处理方法。 @ CommandHandler注解方法的规则与任何处理程序方法相同。 但是，命令不仅可以通过其有效负载进行路由。 命令消息带有一个名称，该名称默认为Command对象的全限定类名称。
 
-By default, `@CommandHandler` annotated methods allow the following parameter types:
+默认情况下，`@ CommandHandler`注解方法允许以下参数类型：
 
-- The first parameter is the payload of the Command Message. It may also be of type `Message` or `CommandMessage`, if the `@CommandHandler` annotation explicitly defined the name of the Command the handler can process. By default, a Command name is the fully qualified class name of the Command's payload.
+- 第一个参数是命令消息的有效载荷。 如果@ CommandHandler注解明确定义了处理程序可以处理的Command的名称，它也可以是'Message'或'CommandMessage`   类型。 默认情况下，命令名称是命令有效负载的完全限定类名称。
 
-- Parameters annotated with `@MetaDataValue` will resolve to the Meta Data value with the key as indicated on the annotation. If `required` is `false` (default), `null` is passed when the meta data value is not present. If `required` is `true`, the resolver will not match and prevent the method from being invoked when the meta data value is not present.
+- 使用`@ MetaDataValue`注解的参数将使用注释中指示的键解析为元数据值。 如果`required`是`false`（默认），当元数据值不存在时传递`null`。 如果`required`是`true`，解析器将不匹配，并防止在元数据值不存在时调用该方法。
 
-- Parameters of type `MetaData` will have the entire `MetaData` of a `CommandMessage` injected.
+-  `MetaData`类型的参数将注入一个`CommandMessage`的整个`MetaData`。`MetaData`类型的参数将注入一个`CommandMessage`的整个`MetaData`。
 
 - Parameters of type `UnitOfWork` get the current Unit of Work injected. This allows command handlers to register actions to be performed at specific stages of the Unit of Work, or gain access to the resources registered with it.
 
