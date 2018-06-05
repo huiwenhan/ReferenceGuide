@@ -153,21 +153,21 @@ Axon为复杂聚合结构中的事件溯源提供支持。 实体像聚合根一
 
 -  `MetaData`类型的参数将注入一个`CommandMessage`的整个`MetaData`。`MetaData`类型的参数将注入一个`CommandMessage`的整个`MetaData`。
 
-- Parameters of type `UnitOfWork` get the current Unit of Work injected. This allows command handlers to register actions to be performed at specific stages of the Unit of Work, or gain access to the resources registered with it.
+- UnitOfWork”类型的参数获取注入的当前工作单元。 这允许命令处理程序注册要在工作单元的特定阶段执行的操作，或获取对其注册的资源的访问权限。
 
-- Parameters of type `Message`, or `CommandMessage` will get the complete message, with both the payload and the Meta Data. This is useful if a method needs several meta data fields, or other properties of the wrapping Message.
+- “Message”或“CommandMessage”类型的参数将获得完整的消息，同时包含有效内容和元数据。 如果方法需要多个元数据字段或包装消息的其他属性，这非常有用。
 
-In order for Axon to know which instance of an Aggregate type should handle the Command Message, the property carrying the Aggregate Identifier in the Command object must be annotated with `@TargetAggregateIdentifier`. The annotation may be placed on either the field or an accessor method (e.g. a getter).
+为了让Axon知道Aggregate类型的哪个实例应该处理Command消息，携带Command对象中的Aggregate Identifier的属性必须用`@ TargetAggregateIdentifier`标注。 注释可以放在字段或访问器方法（例如getter）上。
 
-Commands that create an Aggregate instance do not need to identify the target aggregate identifier, although it is recommended to annotate the Aggregate identifier on them as well. 
+创建Aggregate实例的命令不需要标识目标聚合标识符，但建议在它们上注释集合标识符。
 
-If you prefer to use another mechanism for routing Commands, the behavior can be overridden by supplying a custom `CommandTargetResolver`. This class should return the Aggregate Identifier and expected version (if any) based on a given command.
+如果您更喜欢使用其他机制来路由命令，则可以通过提供自定义的“CommandTargetResolver”来覆盖该行为。 该类应该根据给定的命令返回聚合标识符和预期版本（如果有的话）。
 
 > **Note**
 >
-> When the `@CommandHandler` annotation is placed on an Aggregate's constructor, the respective command will create a new instance of that aggregate and add it to the repository. Those commands do not require to target a specific aggregate instance. Therefore, those commands do not require any `@TargetAggregateIdentifier` or `@TargetAggregateVersion` annotations, nor will a custom `CommandTargetResolver` be invoked for these commands.
+> 当`@ CommandHandler`注释放置在一个Aggregate的构造函数上时，相应的命令将创建该聚合的一个新实例并将其添加到存储库。 这些命令不需要定位特定的聚合实例。 因此，这些命令不需要任何`@ TargetAggregateIdentifier`或`@ TargetAggregateVersion`注释，也不会为这些命令调用自定义的`CommandTargetResolver`。
 >
-> When a command creates an aggregate instance, the callback for that command will receive the aggregate identifier when the command executed successfully.
+>当一个命令创建一个聚合实例时，该命令的回调将在该命令成功执行时收到聚合标识符。
 
 ``` java
 import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
@@ -204,7 +204,7 @@ public class DoSomethingCommand {
 }
 ```
 
-The Axon Configuration API can be used configure the Aggregate. For example:
+Axon配置API可用于配置Aggregate。 例如：
 
 ```
 Configurer configurer = ...
@@ -218,7 +218,7 @@ configurer.configureAggregate(
 );
 ```
 
-`@CommandHandler` annotations are not limited to the aggregate root. Placing all command handlers in the root will sometimes lead to a large number of methods on the aggregate root, while many of them simply forward the invocation to one of the underlying entities. If that is the case, you may place the `@CommandHandler` annotation on one of the underlying entities' methods. For Axon to find these annotated methods, the field declaring the entity in the aggregate root must be marked with `@AggregateMember`. Note that only the declared type of the annotated field is inspected for Command Handlers. If a field value is null at the time an incoming command arrives for that entity, an exception is thrown.
+`@ CommandHandler`注释不限于聚合根。 将所有命令处理程序放在根中有时会导致聚合根上的大量方法，而其中许多方法只是将调用转发给其中一个基础实体。 如果是这种情况，您可以将`@ CommandHandler`注释放在其中一个基础实体的方法中。 对于Axon来查找这些带注释的方法，在聚合根中声明实体的字段必须标记为@ @ AggregateMember。 请注意，只有命令处理程序检查了注释字段的声明类型。 如果传入命令到达该实体时字段值为空，则会引发异常。
 
 ```java
 public class MyAggregate {
@@ -258,25 +258,25 @@ public class MyEntity {
 ```
 > **Note**
 >
-> Note that each command must have exactly one handler in the aggregate. This means that you cannot annotate multiple entities (either root nor not) with @CommandHandler, that handle the same command type. In case you need to conditionally route a command to an entity, the parent of these entities should handle the command, and forward it based on the conditions that apply.
+> 请注意，每个命令在聚合中必须只有一个处理程序。 这意味着你不能使用@CommandHandler注解多个实体（根或非），它们处理相同的命令类型。 如果您需要有条件地将命令路由到实体，则这些实体的父级应处理该命令，并根据所应用的条件转发该命令。
 >
-> The runtime type of the field does not have to be exactly the declared type. However, only the declared type of the `@AggregateMember` annotated field is inspected for `@CommandHandler` methods.
+> 该字段的运行时类型不必完全是声明的类型。 但是，只检查`@ AggregateMember`注释字段的声明类型的`@ CommandHandler`方法。
 
-It is also possible to annotate Collections and Maps containing entities with `@AggregateMember`. In the latter case, the values of the map are expected to contain the entities, while the key contains a value that is used as their reference.
+也可以使用@ AggregateMember注解包含实体的集合和Map。 在后一种情况下，映射的值应包含实体，而键包含一个用作参考的值。
 
-As a command needs to be routed to the correct instance, these instances must be properly identified. Their "id" field must be annotated with `@EntityId`. The property on the command that will be used to find the Entity that the message should be routed to, defaults to the name of the field that was annotated. For example, when annotating the field "myEntityId", the command must define a property with that same name. This means either a `getMyEntityId` or a `myEntityId()` method must be present. If the name of the field and the routing property differ, you may provide a value explicitly using `@EntityId(routingKey = "customRoutingProperty")`.
+由于需要将命令路由到正确的实例，因此必须正确标识这些实例。 他们的“id”字段必须用`@ EntityId`注释。 将用于查找消息应该路由到的实体的命令属性默认为注释字段的名称。 例如，当注释字段“myEntityId”时，该命令必须定义具有相同名称的属性。 这意味着必须存在`getMyEntityId`或`myEntityId（）`方法。 如果字段的名称和路由属性不同，可以使用`@EntityId（routingKey =“customRoutingProperty”）`显式地提供一个值。
 
-If no Entity can be found in the annotated Collection or Map, Axon throws an IllegalStateException; apparently, the aggregate is not capable of processing that command at that point in time.
+如果在带注释的集合或映射中找不到实体，则Axon会抛出IllegalStateException; 显然，汇总在该时间点无法处理该命令。
 
 > **Note**
 >
-> The field declaration for both the Collection or Map should contain proper generics to allow Axon to identify the type of Entity contained in the Collection or Map. If it is not possible to add the generics in the declaration (e.g. because you're using a custom implementation which already defines generic types), you must specify the type of entity used in the `entityType` property on the `@AggregateMember` annotation.
+> 集合或映射的字段声明应包含适当的泛型，以允许Axon识别集合或映射中包含的实体的类型。 如果无法在声明中添加泛型（例如，因为您正在使用已定义泛型的自定义实现），则必须在`@ AggregateMember`注释的`entityType`属性中指定使用的实体类型。
 
 ### External Command Handlers
 
-In certain cases, it is not possible, or desired to route a command directly to an Aggregate instance. In such case, it is possible to register a Command Handler object.
+在某些情况下，不可能或不希望将命令直接路由到聚合实例。 在这种情况下，可以注册一个Command Handler对象。
 
-A Command Handler object is a simple (regular) object, which has `@CommandHandler` annotated methods. Unlike in the case of an Aggregate, there is only a single instance of a Command Handler object, which handles all commands of the types it declares in its methods.
+一个Command Handler对象是一个简单的（常规）对象，它有`@ CommandHandler`注解的方法。 与Aggregate的情况不同，Command Handler对象只有一个实例，它处理它在其方法中声明的所有类型的命令。
 
 ```java
 public class MyAnnotatedHandler {
@@ -299,10 +299,10 @@ configurer.registerCommandHandler(c -> new MyAnnotatedHandler());
 ```
 
 ### Returning results from Command Handlers
-In some cases, the component dispatching a Command needs information about the processing results of a Command. A Command handler method can return a value from its method. That value will be provided to the sender as the result of the command.
+在某些情况下，调度Command的组件需要有关Command的处理结果的信息。 命令处理程序方法可以从其方法返回一个值。 该值将作为命令的结果提供给发件人。
 
-One exception is the `@CommandHandler` on an Aggregate's constructor. In this case, instead of returning the return value of the method (which is the Aggregate itself), the value of the `@AggregateIdentifier` annotated field is returned instead
+一个例外是Aggregate的构造函数中的@ CommandHandler。 在这种情况下，不是返回方法的返回值（它是Aggregate本身），而是返回“@ AggregateIdentifier”注释字段的值
 
 > **Note**
 >
-> While it's possible to return results from Commands, it should be used sparsely. The intent of the command should never be in getting a value, as that would be an indication the message should be designed as a Query Message instead. A typical example for a Command result is the identifier of a newly created entity.
+> 虽然可以从命令返回结果，但应该使用稀疏。 该命令的意图不应该是获取值，因为这将表明该消息应该被设计为查询消息。 命令结果的典型示例是新创建的实体的标识符。
