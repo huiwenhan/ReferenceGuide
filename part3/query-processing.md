@@ -19,7 +19,9 @@ Query Bus
 
 SimpleQueryBus
 --------------
+
 SimpleQueryBus是Axon 3.1中唯一的Query Bus实现。 它在调度它们的线程中直接处理查询。 `SimpleQueryBus`允许配置拦截器，参见[Query Interceptors]（＃query-interceptors）了解更多信息。
+
 Query Interceptors
 ==================
 One of the advantages of using a query bus is the ability to undertake action based on all incoming queries. Examples are logging or authentication, which you might want to do regardless of the type of query. This is done using Interceptors.
