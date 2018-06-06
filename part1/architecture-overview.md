@@ -1,70 +1,70 @@
 Architectural Overview
 ======================
 
-CQRS on itself is a very simple pattern. It only prescribes that the component of an application that processes commands should be separated from the component that processes queries. Although this separation is very simple on itself, it provides a number of very powerful features when combined with other patterns. Axon provides the building blocks that make it easier to implement the different patterns that can be used in combination with CQRS.
+CQRS本身就是一个非常简单的模式。 它只规定处理命令的应用程序组件应与处理查询的组件分离。 虽然这种分离本身非常简单，但是当与其他模式结合使用时，它提供了许多非常强大的功能。 Axon提供了构建模块，可以更轻松地实现可与CQRS结合使用的不同模式。
 
-The diagram below shows an example of an extended layout of a CQRS-based event driven architecture. The UI component, displayed on the left, interacts with the rest of the application in two ways: it sends commands to the application (shown in the top section), and it queries the application for information (shown in the bottom section).
+下图显示了基于CQRS的事件驱动架构的扩展布局示例。 显示在左侧的UI组件以两种方式与应用程序的其余部分交互：它向应用程序发送命令（如上部分所示），并向应用程序查询信息（如下部分所示）。
 
 ![Architecture overview of a CQRS application](detailed-architecture-overview.png)
 
-Commands are typically represented by simple and straightforward objects that contain all data necessary for a command handler to execute it. A command expresses its intent by its name. In Java terms, that means the class name is used to figure out what needs to be done, and the fields of the command provide the information required to do it.
+命令通常由简单而直接的对象表示，这些对象包含执行命令处理程序所需的全部数据。 命令通过其名称表达其意图。 用Java语言来说，这意味着使用类名来确定需要完成什么，并且命令的各个字段提供了执行此操作所需的信息。
 
-The Command Bus receives commands and routes them to the Command Handlers. Each command handler responds to a specific type of command and executes logic based on the contents of the command. In some cases, however, you would also want to execute logic regardless of the actual type of command, such as validation, logging or authorization.
+命令总线接收命令并将它们路由到命令处理程序。 每个命令处理程序都会响应特定类型的命令，并根据命令的内容执行逻辑。 但是，在某些情况下，无论命令的实际类型如验证，日志记录或授权，您也希望执行逻辑。
 
-The command handler retrieves domain objects (Aggregates) from a repository and executes methods on them to change their state. These aggregates typically contain the actual business logic and are therefore responsible for guarding their own invariants. The state changes of aggregates result in the generation of Domain Events. Both the Domain Events and the Aggregates form the domain model.
+命令处理程序从存储库中检索域对象（聚合）并执行它们上的方法来更改它们的状态。 这些聚合通常包含实际的业务逻辑，因此负责保护自己的不变量。 聚合的状态变化导致产生域事件。 域事件和聚合形成域模型。
 
-Repositories are responsible for providing access to aggregates. Typically, these repositories are optimized for lookup of an aggregate by its unique identifier only. Some repositories will store the state of the aggregate itself (using Object Relational Mapping, for example), while others store the state changes that the aggregate has gone through in an Event Store. The repository is also responsible for persisting the changes made to aggregates in its backing storage.
+存储库负责提供对聚合的访问。 通常，这些存储库仅针对通过其唯一标识符查找聚合进行了优化。 一些存储库将存储聚合本身的状态（例如使用对象关系映射），而另一些存储聚合在事件存储中经历的状态更改。 存储库还负责在其后备存储中保留对聚合所做的更改。
 
-Axon provides support for both the direct way of persisting aggregates (using object-relational-mapping, for example) and for event sourcing.
+Axon提供对持久聚合的直接方式（例如使用对象关系映射）和事件溯源的支持。
 
-The event bus dispatches events to all interested event listeners. This can either be done synchronously or asynchronously. Asynchronous event dispatching allows the command execution to return and hand over control to the user, while the events are being dispatched and processed in the background. Not having to wait for event processing to complete makes an application more responsive. Synchronous event processing, on the other hand, is simpler and is a sensible default. By default, synchronous processing will process event listeners in the same transaction that also processed the command.
+事件总线将事件分派给所有感兴趣的事件监听者。 这可以同步或异步完成。 异步事件分派允许命令执行返回并将控制移交给用户，而事件正在后台调度和处理。 无需等待事件处理完成，可以使应用程序更具响应性。 另一方面，同步事件处理更简单并且是一个合理的默认设置。 默认情况下，同步处理将在也处理命令的同一事务中处理事件侦听器。
 
-Event listeners receive events and handle them. Some handlers will update data sources used for querying while others send messages to external systems. As you might notice, the command handlers are completely unaware of the components that are interested in the changes they make. This means that it is very non-intrusive to extend the application with new functionality. All you need to do is add another event listener. The events loosely couple all components in your application together.
+事件侦听器接收事件并处理它们。 一些处理程序将更新用于查询的数据源，而另一些则将消息发送到外部系统。 您可能会注意到，命令处理程序完全不了解对其所做更改感兴趣的组件。 这意味着用新功能扩展应用程序是非常不干扰的。 您只需添加另一个事件侦听器即可。 事件将应用程序中的所有组件松散地耦合在一起。
 
-In some cases, event processing requires new commands to be sent to the application. An example of this is when an order is received. This could mean the customer's account should be debited with the amount of the purchase, and shipping must be told to prepare a shipment of the purchased goods. In many applications, logic will become more complicated than this: what if the customer didn't pay in time? Will you send the shipment right away, or await payment first? The saga is the CQRS concept responsible for managing these complex business transactions.
+在某些情况下，事件处理需要将新命令发送给应用程序。 一个例子是收到订单时。 这可能意味着客户的账户应该以购买金额记帐，并且必须通知运送准备运送所购买的商品。 在许多应用中，逻辑将变得比这更复杂：如果客户没有及时付款，该怎么办？ 您会立即寄出货物，还是先等待付款？ 这个Saga是负责管理这些复杂商业交易的CQRS概念。
 
-Since Axon 3.1 the framework provides components to handle queries. The Query Bus receives queries and routes them to the Query Handlers. A query handler is registered at the query bus with both the type of query it handles as well as the type of response it providers. Both the query and the result type are typically simple, read-only DTO objects. The contents of these DTOs are typically driven by the needs of the User Interface. In most cases, they map directly to a specific view in the UI (also referred to as table-per-view).
+自从Axon 3.1框架提供了处理查询的组件。 查询总线接收查询并将它们路由到查询处理程序。 查询处理程序在查询总线处注册，处理的查询类型以及响应提供程序的类型。 查询和结果类型通常都是简单的只读DTO对象。 这些DTO的内容通常由用户界面的需求驱动。 在大多数情况下，它们直接映射到UI中的特定视图（也称为“按视图”）。
 
-It is possible to register multiple query handlers for the same type of query and type of response. When dispatching queries, the client can indicate whether he wants a result from one or from all available query handlers.
+可以为同一类型的查询和响应类型注册多个查询处理程序。 当分派查询时，客户可以指示他是想要一个结果还是来自所有可用的查询处理程序。
 
 Axon Module Structure
 =====================
 
-Axon Framework consists of a number of modules that target specific problem areas of CQRS. Depending on the exact needs of your project, you will need to include one or more of these modules.
+Axon框架由一些针对CQRS特定问题领域的模块组成。 根据项目的确切需要，您需要包含一个或多个这些模块。
 
-As of Axon 2.1, all modules are OSGi compatible bundles. This means they contain the required headers in the manifest file and declare the packages they import and export. At the moment, only the Slf4J bundle (1.7.0 &lt;= version &lt; 2.0.0) is required. All other imports are marked as optional, although you're very likely to need others.
+从Axon 2.1开始，所有模块都是OSGi兼容的软件包。 这意味着它们在清单文件中包含必需的头文件并声明它们导入和导出的包。 此刻，仅需要Slf4J捆绑包（1.7.0 <=版本<2.0.0）。 所有其他进口都标记为可选，尽管您很可能需要其他进口。
 
 Main modules
 ------------
 
-Axon's main modules are the modules that have been thoroughly tested and are robust enough to use in demanding production environments. The maven groupId of all these modules is `org.axonframework`.
+Axon的主要模块是经过全面测试的模块，并且足够坚固，可用于要求苛刻的生产环境。 所有这些模块的maven groupId都是`org.axonframework`。
 
-The Core module contains, as the name suggests, the Core components of Axon. If you use a single-node setup, this module is likely to provide all the components you need. All other Axon modules depend on this module, so it must always be available on the classpath.
+正如其名称所示，核心模块包含了Axon的核心组件。 如果您使用单节点安装程序，则该模块可能会提供您需要的所有组件。 所有其他的Axon模块都依赖于这个模块，所以它必须始终在类路径中可用。
 
-The Test module contains test fixtures that you can use to test Axon based components, such as your Command Handlers, Aggregates and Sagas. You typically do not need this module at runtime and will only need to be added to the classpath during tests.
+测试模块包含可用于测试基于Axon的组件的测试装置，例如您的命令处理程序，聚集和Sagas。 您通常在运行时不需要此模块，只需在测试期间将其添加到类路径中即可。
 
-The Distributed CommandBus modules contain implementations that can be used to distribute commands over multiple nodes. It comes with JGroups and Spring Cloud Connectors that are used to connect these nodes.
+分布式CommandBus模块包含可用于在多个节点上分发命令的实现。 它带有用于连接这些节点的JGroups和Spring Cloud连接器。
 
-The AMQP module provides components that allow you to build up an EventBus using an AMQP-based message broker as distribution mechanism. This allows for guaranteed-delivery, even when the Event Handler node is temporarily unavailable.
+AMQP模块提供的组件允许您使用基于AMQP的消息代理作为分发机制来构建EventBus。 这允许保证传送，即使事件处理程序节点暂时不可用。
 
-The Spring module allows Axon components to be configured in the Spring Application context. It also provides a number of building block implementations specific to Spring Framework, such as an adapter for publishing and retrieving Axon Events on a Spring Messaging Channel.
+Spring模块允许在Spring应用程序上下文中配置Axon组件。 它还提供了许多特定于Spring Framework的构建块实现，例如用于在Spring消息通道上发布和检索Axon事件的适配器。
 
-MongoDB is a document based NoSQL database. The Mongo module provides Event and Saga Store implementations that store event streams and sagas in a MongoDB database.
+MongoDB是一个基于文档的NoSQL数据库。 Mongo模块提供Event和Saga Store实现，将事件流和Saga存储在MongoDB数据库中。
 
-Several AxonFramework components provide monitoring information. The Metrics module provides basic implementations based on Codehale to collect the monitoring information. 
+几个AxonFramework组件提供监视信息。 度量模块提供了基于Codehale的基本实现来收集监控信息。
 
 Working with Axon APIs
 ======================
 
-CQRS is an architectural pattern, making it impossible to provide a single solution that fits all projects. Axon Framework does not try to provide that one solution, obviously. Instead, Axon provides implementations that follow best practices and the means to tweak each of those implementations to your specific requirements.
+CQRS是一种架构模式，无法提供适合所有项目的单一解决方案。 显然，Axon框架并不试图提供这种解决方案。 取而代之的是，Axon提供了遵循最佳实践的实现方法，以及根据您的具体要求调整每个实现的方法。
 
-Almost all infrastructure building blocks will provide hook points (such as Interceptors, Resolvers, etc.) that allow you to add application-specific behavior to those building blocks. In many cases, Axon will provide implementations for those hook points that fit most use cases. If required, you can simply implement your own.
+几乎所有的基础设施构建块都会提供钩子点（例如拦截器，解析器等），允许您将特定于应用程序的行为添加到这些构建块。 在很多情况下，Axon将为那些适合大多数用例的钩子点提供实现。 如果需要，你可以简单地实现你自己的。
 
-Non-infrastructural objects, such as Messages, are generally immutable. This ensures that these objects are safe to use in a multi-threaded environment, without side-effects.
+非基础结构对象（如消息）通常是不可变的。 这确保了这些对象可以安全地在多线程环境中使用，而没有副作用。
 
-To ensure maximum customization, all Axon components are defined using interfaces. Abstract and concrete implementations are provided to help you on your way, but will nowhere be required by the framework. It is always possible to build a completely custom implementation of any building block using that interface.
+为确保最大限度的定制，所有的Axon组件都使用接口进行定义。 提供了抽象和具体的实现来帮助你在路上，但框架将无处可用。 始终可以使用该接口构建任何构建块的完全自定义实现。
 
 Spring Support
 ==============
 
-Axon Framework provides extensive support for Spring, but does not require you to use Spring in order to use Axon. All components can be configured programmatically and do not require Spring on the classpath. However, if you do use Spring, much of the configuration is made easier with the use of Spring's annotation support.
+Axon Framework为Spring提供了广泛的支持，但并不要求您使用Spring来使用Axon。 所有组件都可以通过编程进行配置，并且不需要类路径中的Spring。 但是，如果你使用Spring，通过使用Spring的注解支持，许多配置变得更加容易。

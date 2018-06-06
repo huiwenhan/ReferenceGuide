@@ -11,43 +11,43 @@ Axon Framework Background
 A brief history
 ---------------
 
-The demands on software projects increase rapidly as time progresses. Companies want their (web)applications to evolve together with their business. That means that not only projects and code bases become more complex, it also means that functionality is constantly added, changed and (unfortunately not enough) removed. It can be frustrating to find out that a seemingly easy-to-implement feature can require development teams to take apart an entire application. Furthermore, today's web applications target the audience of potentially billions of people, making scalability an indisputable requirement.
+随着时间的推移，对软件项目的需求迅速增加。 公司希望他们的（网络）应用程序与他们的业务一起发展。 这意味着不仅项目和代码库变得更加复杂，而且意味着不断添加，更改和（不幸不够）的功能被删除。 发现一个看起来很容易实现的功能可能要求开发团队拆分整个应用程序可能令人沮丧。 此外，今天的Web应用程序面向潜在数十亿人的受众，使可扩展性成为不争的要求。
 
-Although there are many applications and frameworks around that deal with scalability issues, such as GigaSpaces and Terracotta, they share one fundamental flaw. These stacks try to solve the scalability issues while letting developers develop applications using the layered architecture they are used to. In some cases, they even prevent or severely limit the use of a real domain model, forcing all domain logic into services. Although that is faster to start building an application, eventually this approach will cause complexity to increase and development to slow down.
+虽然有很多应用程序和框架涉及可扩展性问题，例如GigaSpaces和Terracotta，但它们有一个基本缺陷。 这些堆栈尝试解决可伸缩性问题，同时让开发人员使用他们习惯的分层架构开发应用程序。 在某些情况下，他们甚至会阻止或严重限制使用真实域模型，从而迫使所有域逻辑进入服务。 尽管开始构建应用程序的速度会更快，但最终这种方法会导致复杂性增加并使开发速度放慢。
 
-The Command Query Responsibility Segregation (CQRS) pattern addresses these issues by drastically changing the way applications are architected. Instead of separating logic into separate layers, logic is separated based on whether it is changing an application's state or querying it. That means that executing commands (actions that potentially change an application's state) are executed by different components than those that query for the application's state. The most important reason for this separation is the fact that there are different technical and non-technical requirements for each of them. When commands are executed, the query components are (a)synchronously updated using events. This mechanism of updates through events, is what makes this architecture so extensible, scalable and ultimately more maintainable.
+命令查询责任分离（CQRS）模式通过彻底改变应用程序架构的方式来解决这些问题。 逻辑不是将逻辑分成单独的层，而是基于它是在改变应用程序的状态还是在查询逻辑。 这意味着执行命令（可能改变应用程序状态的动作）由与查询应用程序状态的组件不同的组件执行。 这种分离的最重要原因是每个人都有不同的技术和非技术要求。 当执行命令时，查询组件（a）使用事件同步更新。 这种通过事件进行更新的机制，使得这种架构具有可扩展性，可伸缩性并最终能够更好地维护。
 
 > **Note**
 >
 > A full explanation of CQRS is not within the scope of this document. If you would like to have more background information about CQRS, visit the Axon Framework website: [www.axonframework.org](http://www.axonframework.org/). It contains links to background information.
 
-Since CQRS is fundamentally different than the layered-architecture which dominates today's software landscape, it is not uncommon for developers to walk into a few traps while trying to find their way around this architecture. That's why Axon Framework was conceived: to help developers implement CQRS applications while focusing on the business logic.
+由于CQRS与主导当今软件领域的分层架构截然不同，因此开发人员在尝试围绕此架构寻找解决方案时陷入一些陷阱并不罕见。 这就是Axon Framework构思的原因：帮助开发人员在关注业务逻辑的同时实施CQRS应用程序。
 
 What is Axon?
 -------------
 
-Axon Framework helps build scalable, extensible and maintainable applications by supporting developers apply the Command Query Responsibility Segregation (CQRS) architectural pattern. It does so by providing implementations of the most important building blocks, such as aggregates, repositories and event buses (the dispatching mechanism for events). Furthermore, Axon provides annotation support, which allows you to build aggregates and event listeners without tying your code to Axon specific logic. This allows you to focus on your business logic, instead of the plumbing, and helps you to make your code easier to test in isolation.
+通过支持开发人员应用命令查询责任分离（CQRS）体系结构模式，Axon Framework可帮助构建可扩展，可扩展和可维护的应用程序。 它通过提供最重要构建块的实现来实现，如聚合，存储库和事件总线（事件的调度机制）。 此外，Axon提供了注释支持，允许您构建聚集和事件侦听器，而无需将代码绑定到Axon特定的逻辑。 这使您可以专注于业务逻辑而不是管道，并帮助您使代码更容易独立测试。
 
-Axon does not, in any way, try to hide the CQRS architecture or any of its components from developers. Therefore, depending on team size, it is still advisable to have one or more developers with a thorough understanding of CQRS on each team. However, Axon does help when it comes to guaranteeing delivering events to the right event listeners and processing them concurrently and in the correct order. These multi-threading concerns are typically hard to deal with, leading to hard-to-trace bugs and sometimes complete application failure. When you have a tight deadline, you probably don't even want to care about these concerns. Axon's code is thoroughly tested to prevent these types of bugs.
+Axon并不以任何方式试图隐藏开发人员的CQRS架构或其任何组件。 因此，根据团队规模，建议一个或多个开发人员全面了解每个团队的CQRS。 然而，Axon在确保将事件传递给正确的事件侦听器并按照正确的顺序同时处理它们方面提供了帮助。 这些多线程问题通常很难处理，导致难以跟踪的错误，有时会导致应用程序完全失败。 当你有紧迫的期限时，你可能甚至不想关心这些问题。 Axon的代码已经过彻底测试，可以防止这些类型的错误。
 
-The Axon Framework consists of a number of modules (jars) that provide the tools and components to build a scalable infrastructure. The Axon Core module provides the basic APIs for the different components, and simple implementations that provide solutions for single-JVM applications. The other modules address scalability or high-performance issues, by providing specialized building blocks.
+Axon框架由许多模块（罐子）组成，这些模块提供了构建可扩展基础架构的工具和组件。 Axon核心模块为不同组件提供基本的API，以及为单个JVM应用程序提供解决方案的简单实现。 其他模块通过提供专门的构建模块来解决可伸缩性或高性能问题。
 
 When to use Axon?
 -----------------
 
-Not every application will benefit from Axon. Simple CRUD (Create, Read, Update, Delete) applications which are not expected to scale will probably not benefit from CQRS or Axon. However, there is a wide variety of applications that do benefit from Axon.
+并非所有的应用程序都能从Axon中受益。 简单的CRUD（创建，读取，更新，删除）预计不会扩展的应用程序可能不会从CQRS或Axon中受益。 但是，有许多应用程序可以从Axon中受益。
 
-Applications that will likely benefit from CQRS and Axon are those that show one or more of the following characteristics:
+可能受益于CQRS和Axon的应用程序是那些显示一个或多个以下特征的应用程序：
 
--   The application is likely to be extended with new functionality during a long period of time. For example, an online store might start off with a system that tracks progress of Orders. At a later stage, this could be extended with Inventory information, to make sure stocks are updated when items are sold. Even later, accounting can require financial statistics of sales to be recorded, etc. Although it is hard to predict how software projects will evolve in the future, the majority of this type of application is clearly presented as such.
+-  该应用程序可能会在很长一段时间内以新功能进行扩展。 例如，一家网上商店可能会开始跟踪订单进度的系统。 在后期阶段，这可以通过库存信息进行扩展，以确保在销售物品时更新库存。 甚至以后，会计可能需要记录销售的财务统计数据等。虽然很难预测未来软件项目的演变情况，但大多数类型的应用程序都清晰地表示出来。
 
--   The application has a high read-to-write ratio. That means data is only written a few times, and read many times more. Since data sources for queries are different to those that are used for command validation, it is possible to optimize these data sources for fast querying. Duplicate data is no longer an issue, since events are published when data changes.
+-  该应用程序具有较高的读写比。 这意味着数据只会被写入几次，并且会被读取多次。 由于查询的数据源与用于命令验证的数据源不同，因此可以优化这些数据源以进行快速查询。 重复数据不再是一个问题，因为事件在数据更改时发布。
 
--   The application presents data in many different formats. Many applications nowadays don't stop when showing information on a web page. Some applications, for example, send monthly emails to notify users of changes that occurred that might be relevant to them. Search engines are another example. They use the same data your application does, but in a way that is optimized for quick searching. Reporting tools aggregate information into reports that show data evolution over time. This, again, is a different format of the same data. Using Axon, each data source can be updated independently of each other on a real-time or scheduled basis.
+-   该应用程序以多种不同格式呈现数据。 现在许多应用程序在网页上显示信息时不会停下来。 例如，某些应用程序会每月发送一封电子邮件通知用户发生的可能与其相关的更改。 搜索引擎是另一个例子。 他们使用与您的应用程序相同的数据，但以针对快速搜索进行优化的方式。 报告工具可将信息汇总到可显示数据随时间变化的报告中。 这也是相同数据的不同格式。 使用Axon，每个数据源可以实时或按计划独立更新。
 
--   When an application has clearly separated components with different audiences, it can benefit from Axon, too. An example of such application is the online store. Employees will update product information and availability on the website, while customers place orders and query for their order status. With Axon, these components can be deployed on separate machines and scaled using different policies. They are kept up-to-date using the events, which Axon will dispatch to all subscribed components, regardless of the machine they are deployed on.
+-  当应用程序与不同的受众有明确的分离组件时，它也可以从Axon中受益。 这种应用的一个例子是在线商店。 员工将更新网站上的产品信息和可用性，同时客户下订单并查询其订单状态。 借助Axon，这些组件可以部署在不同的机器上，并使用不同的策略进行扩展。 他们使用事件保持最新状态，Axon将派发给所有订阅的组件，而不管他们部署在哪台机器上。
 
--   Integration with other applications can be cumbersome work. The strict definition of an application's API using commands and events makes it easier to integrate with external applications. Any application can send commands or listen to events generated by the application.
+-  与其他应用程序集成可能是繁琐的工作。 使用命令和事件严格定义应用程序的API可以更容易地与外部应用程序集成。 任何应用程序都可以发送命令或侦听由应用程序生成的事件。
 
 Getting started
 ===============
