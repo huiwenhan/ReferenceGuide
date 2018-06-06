@@ -1,25 +1,24 @@
 Query Dispatching
 =================
-Since version 3.1 Axon Framework also offers components for the Query handling. Although creating such a layer is fairly straight-forward, using Axon Framework for this part of the application has a number of benefits, such as the reuse of features such as interceptors and message monitoring. 
+自3.1版本以来，Axon Framework还为查询处理提供了组件。 尽管创建这样一个图层是非常直接的，但在这部分应用程序中使用Axon Framework有许多好处，例如重用拦截器和消息监视等功能。
 
-The next sections provide an overview of the tasks related to setting up a Query dispatching infrastructure with the Axon Framework.
+接下来的部分概述了与使用Axon框架设置Query调度基础架构相关的任务。
 
 Query Gateway
 =============
-The Query Gateway is a convenient interface towards the Query dispatching mechanism. While you are not required to use a Gateway to dispatch Queries, it is generally the easiest option to do so. Axon provides a `QueryGateway` interface and the `DefaultQueryGateway` implementation. The query gateway provides a number of methods that allow you to send a query and wait for a single or multiple results either synchronously, with a timeout or asynchronously. The query gateway needs to be configured with access to the Query Bus and a (possibly empty) list of `QueryDispatchInterceptor`s.
+查询网关是查询调度机制的便捷接口。 虽然您不需要使用网关来发送查询，但通常这是最简单的选择。 Axon提供了一个`QueryGateway`接口和`DefaultQueryGateway`实现。 查询网关提供了许多方法，允许您发送查询并同步等待一个或多个结果，具有超时或异步。 查询网关需要配置为可以访问Query Bus和一个（可能为空）QueryDispatchInterceptor列表。
 
 Query Bus
 =========
-The Query Bus is the mechanism that dispatches queries to Query Handlers. Queries are registered using the combination of the query request name and query response type. It is possible to register multiple handlers for the same request-response combination, which can be used to implement for instance the scatter-gather pattern. When dispatching queries, the client must indicate whether it wants a response from a single handler or from all handlers.
+查询总线是将查询分派给查询处理程序的机制。 查询使用查询请求名称和查询响应类型的组合进行注册。 可以为相同的请求 - 响应组合注册多个处理程序，这可用于实现分散 - 聚集模式。 在调度查询时，客户端必须指出是否需要来自单个处理程序或所有处理程序的响应。
 
-If the client requests a response from a single handler, and no handler is found, a `NoHandlerForQueryException` is thrown. In case multiple handlers are registered, it is up to the implementation of the Query Bus to decide which handler is actually invoked.
+如果客户端请求单个处理程序的响应，并且没有找到处理程序，则会抛出“NoHandlerForQueryException”。 如果注册了多个处理程序，则由查询总线的实现决定实际调用哪个处理程序。
 
-If the client requests a response from all handlers, a stream of results is returned. This stream contains a result from each handler that successfully handled the query, in unspecified order. In case there are no handlers for the query, or all handlers threw an exception while handling the request, the stream is empty.
+如果客户端请求所有处理程序的响应，则会返回结果流。 该流包含来自每个处理程序的成功处理查询的结果，以未指定的顺序。 如果查询没有处理程序，或者所有处理程序在处理请求时都抛出异常，则该流为空。
 
 SimpleQueryBus
 --------------
-The `SimpleQueryBus` is the only Query Bus implementation in Axon 3.1. It does straightforward processing of queries in the thread that dispatches them. The `SimpleQueryBus` allows interceptors to be configured, see [Query Interceptors](#query-interceptors) for more information.
-
+SimpleQueryBus是Axon 3.1中唯一的Query Bus实现。 它在调度它们的线程中直接处理查询。 `SimpleQueryBus`允许配置拦截器，参见[Query Interceptors]（＃query-interceptors）了解更多信息。
 Query Interceptors
 ==================
 One of the advantages of using a query bus is the ability to undertake action based on all incoming queries. Examples are logging or authentication, which you might want to do regardless of the type of query. This is done using Interceptors.
