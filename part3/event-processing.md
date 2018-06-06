@@ -117,17 +117,17 @@ Note that you can override the TokenStore to use with Tracking Processors in the
 
 ### Parallel Processing ###
 
-As of Axon Framework 3.1, Tracking Processors can use multiple threads to process an Event Stream. They do so, by claiming a so-called segment, identifier by a number. Normally, a single thread will process a single Segment.
+从Axon Framework 3.1开始，跟踪处理器可以使用多个线程来处理事件流。 他们这样做，通过一个数字为标识符的声称所谓的分段。 通常，一个线程将处理单个段。
 
-The number of Segments used can be defined. When a Processor starts for the first time, it can initialize a number of segments. This number defines the maximum number of threads that can process events simultaneously. Each node running of a TrackingProcessor will attempt to start its configured amount of Threads, to start processing these.
+可以定义使用的段的数量。 当处理器第一次启动时，它可以初始化多个段。 此数字定义可以同时处理事件的最大线程数。 TrackingProcessor的每个节点都将尝试启动配置的线程数量，以开始处理这些线程。
 
-Event Handlers may have specific expectations on the ordering of events. If this is the case, the processor must ensure these events are sent to these Handlers in that specific order. Axon uses the `SequencingPolicy` for this. The `SequencingPolicy` is essentially a function, that returns a value for any given message. If the return value of the `SequencingPolicy` function is equal for two distinct event messages, it means that those messages must be processed sequentially. By default, Axon components will use the `SequentialPerAggregatePolicy`, which makes it so that Events published by the same Aggregate instance will be handled sequentially.
+事件处理程序可能对事件的排序有特定的期望。 如果是这种情况，处理器必须确保这些事件以特定的顺序发送给这些处理程序。 Axon为此使用`SequencingPolicy`。 SequencingPolicy本质上是一个函数，它为任何给定的消息返回一个值。 如果`SequencingPolicy`函数的返回值对于两个不同的事件消息相等，则意味着这些消息必须按顺序处理。 默认情况下，Axon组件将使用`SequentialPerAggregatePolicy`，它使得由相同的聚集实例发布的事件将被顺序处理。
 
-A Saga instance is never invoked concurrently by multiple threads. Therefore, a Sequencing Policy for a Saga is irrelevant. Axon will ensure each Saga instance receives the Events it needs to process in the order they have been published on the Event Bus.
+一个Saga实例永远不会被多个线程同时调用。 因此，佐贺的排序策略是无关紧要的。 Axon将确保每个Saga实例都按它们在事件总线上发布的顺序接收它需要处理的事件。
 
 > ** Note **
 >
-> Note that Subscribing Processors don't manage their own threads. Therefore, it is not possible to configure how they should receive their events. Effectively, they will always work on a sequential-per-aggregate basis, as that is generally the level of concurrency in the Command Handling component.
+> 请注意，订阅处理器不管理他们自己的线程。 因此，不可能配置他们应该如何接收他们的事件。 实际上，它们将始终按每个聚合按顺序进行工作，因为这通常是命令处理组件中的并发级别。
 
 #### Multi-node processing ####
 
@@ -138,31 +138,31 @@ The `TokenStore` instance will use the JVM's name (usually a combination of the 
 Distributing Events
 -------------------
 
-In some cases, it is necessary to publish events to an external system, such as a message broker.
+在某些情况下，有必要将事件发布到外部系统，如消息代理。
 
 ### Spring AMQP
 
-Axon provides out-of-the-box support to transfer Events to and from an AMQP message broker, such as Rabbit MQ.
+Axon提供了开箱即用的支持，可以将事件传送到AMQP消息代理（如Rabbit MQ）和从AMQP消息代理传送事件。
 
 #### Forwarding events to an AMQP Exchange
 
-The `SpringAMQPPublisher` forwards events to an AMQP Exchange. It is initialized with a `SubscribableMessageSource`, which is generally the `EventBus` or `EventStore`. Theoretically, this could be any source of Events that the publisher can Subscribe to.
+`SpringAMQPPublisher`将事件转发给AMQP Exchange。 它使用`SubscribableMessageSource`进行初始化，通常是`EventBus`或`EventStore`。 理论上，这可能是发布者可以订阅的任何事件的来源。
 
-To configure the SpringAMQPPublisher, simply define an instance as a Spring Bean. There is a number of setter methods that allow you to specify the behavior you expect, such as Transaction support,  publisher acknowledgements (if supported by the broker), and the exchange name.
+要配置SpringAMQPPublisher，只需将一个实例定义为Spring Bean。 有许多setter方法允许您指定您期望的行为，例如事务支持，发布者确认（如果代理支持）以及交换名称。
  
-The default exchange name is 'Axon.EventBus'. 
+默认交换名称是'Axon.EventBus'。
 
 > **Note**
 >
-> Note that exchanges are not automatically created. You must still declare the Queues, Exchanges and Bindings you wish to use. Check the Spring documentation for more information.
+> 请注意，交换不会自动创建。 您仍然必须声明您希望使用的队列，交换和绑定。 查看Spring文档以获取更多信息。
 
 #### Reading Events from an AMQP Queue
 
-Spring has extensive support for reading messages from an AMQP Queue. However, this needs to be 'bridged' to Axon, so that these messages can be handled from Axon as if they are regular Event Messages.
+Spring对从AMQP队列读取消息提供了广泛的支持。 但是，这需要与Axon'桥接'，以便这些消息可以从Axon处理，就好像它们是常规的事件消息一样。
 
-The `SpringAMQPMessageSource` allows Event Processors to read messages from a Queue, instead of the Event Store or Event Bus. It acts as an adapter between Spring AMQP and the `SubscribableMessageSource` needed by these processors.
+`SpringAMQPMessageSource`允许事件处理器从队列中读取消息，而不是事件存储或事件总线。 它充当Spring AMQP和这些处理器所需的`SubscribableMessageSource`之间的适配器。
 
-The easiest way to configure the SpringAMQPMessageSource, is by defining a bean which overrides the default `onMessage` method and annotates it with `@RabbitListener`, as follows:
+配置SpringAMQPMessageSource最简单的方法是定义一个bean，它覆盖默认的`onMessage`方法并用`@ RabbitListener`注释它，如下所示：
 
 ```java
 @Bean
@@ -193,25 +193,26 @@ Note that Tracking Processors are not compatible with the SpringAMQPMessageSourc
 Asynchronous Event Processing
 -----------------------------
 
-The recommended approach to handle Events asynchronously is by using a Tracking Event Processor. This implementation can guarantee processing of all events, even in case of a system failure (assuming the Events have been persisted).
+异步处理事件的推荐方法是使用跟踪事件处理器。 这个实现可以保证处理所有事件，即使在系统故障的情况下（假设事件已被持续）。
 
-However, it is also possible to handle Events asynchronously in a `SubscribingProcessor`. To achieve this, the `SubscribingProcessor` must be configured with an `EventProcessingStrategy`. This strategy can be used to change how invocations of the Event Listeners should be managed.
+但是，也可以在“订阅处理器”中异步处理事件。 为了达到这个目的，'SubscribingProcessor`必须配置一个`EventProcessingStrategy`。 这个策略可以用来改变如何管理事件监听器的调用。
 
-The default strategy (`DirectEventProcessingStrategy`) invokes these handlers in the thread that delivers the Events. This allows processors to use existing transactions.
+默认策略（`DirectEventProcessingStrategy`）在传递事件的线程中调用这些处理程序。 这允许处理器使用现有的事务。
  
-The other Axon-provided strategy is the `AsynchronousEventProcessingStrategy`. It uses an Executor to asynchronously invoke the Event Listeners.
+另一个Axon提供的策略是`AsynchronousEventProcessingStrategy`。 它使用Executor异步调用事件监听器。
 
-Even though the `AsynchronousEventProcessingStrategy` executes asynchronously, it is still desirable that certain events are processed sequentially. The `SequencingPolicy` defines whether events must be handled sequentially, in parallel or a combination of both. Policies return a sequence identifier of a given event. If the policy returns an equal identifier for two events, this means that they must be handled sequentially by the event handler. A `null` sequence identifier means the event may be processed in parallel with any other event.
+即使“AsynchronousEventProcessingStrategy”异步执行，仍然需要按顺序处理某些事件。 SequencingPolicy定义事件是否必须按顺序，并行或两者结合来处理。 策略返回给定事件的序列标识符。 如果策略为两个事件返回相同的标识符，这意味着它们必须由事件处理程序按顺序处理。 “空”序列标识符表示该事件可以与任何其他事件并行处理。
 
-Axon provides a number of common policies you can use:
+Axon提供了许多可以使用的通用策略：
 
-* The `FullConcurrencyPolicy` will tell Axon that this event handler may handle all events concurrently. This means that there is no relationship between the events that require them to be processed in a particular order.
+* FullConcurrencyPolicy将告诉Axon该事件处理程序可以同时处理所有事件。 这意味着要求按特定顺序处理的事件之间没有关系。
 
-* The `SequentialPolicy` tells Axon that all events must be processed sequentially. Handling of an event will start when the handling of a previous event is finished.
+* SequentialPolicy告诉Axon所有事件必须按顺序处理。 事件的处理将在前一个事件的处理完成时开始。
 
-* `SequentialPerAggregatePolicy` will force domain events that were raised from the same aggregate to be handled sequentially. However, events from different aggregates may be handled concurrently. This is typically a suitable policy to use for event listeners that update details from aggregates in database tables.
+* “SequentialPerAggregatePolicy”将强制从相同聚合中引发的域事件按顺序处理。 但是，来自不同聚合的事件可能会同时处理。 这通常是用于更新数据库表中聚合的细节的事件侦听器的合适策略。
 
-Besides these provided policies, you can define your own. All policies must implement the `SequencingPolicy` interface. This interface defines a single method, `getSequenceIdentifierFor`, that returns the sequence identifier for a given event. Events for which an equal sequence identifier is returned must be processed sequentially. Events that produce a different sequence identifier may be processed concurrently. For performance reasons, policy implementations should return `null` if the event may be processed in parallel to any other event. This is faster, because Axon does not have to check for any restrictions on event processing.
+除了这些提供的政策，您可以定义自己的。 所有策略都必须实现`SequencingPolicy`接口。 这个接口定义了一个方法，`getSequenceIdentifierFor`，它返回给定事件的序列标识符。 必须按顺序处理返回了相同序列标识符的事件。 产生不同序列标识符的事件可以同时处理。 出于性能原因，如果事件可能与任何其他事件并行处理，则策略实现应返回“null”。 这是更快的，因为Axon不必检查事件处理的任何限制。
 
-It is recommended to explicitly define an `ErrorHandler` when using the `AsynchronousEventProcessingStrategy`. The default `ErrorHandler` propagates exceptions, but in an asynchronous execution, there is nothing to propagate to, other than the Executor. This may result in Events not being processed.
-Instead, it is recommended to use an `ErrorHandler` that reports errors and allows processing to continue. The `ErrorHandler` is configured on the constructor of the `SubscribingEventProcessor`, where the `EventProcessingStrategy` is also provided.
+议在使用“AsynchronousEventProcessingStrategy”时明确定义一个`ErrorHandler`。 默认的`ErrorHandler`传播异常，但在异步执行中，除Executor之外没有任何东西可传播。 这可能会导致事件未被处理。
+
+相反，建议使用报告错误并允许处理继续的`ErrorHandler`。 `ErrorHandler`配置在`SubscribingEventProcessor`的构造函数中，其中还提供了`EventProcessingStrategy`。
