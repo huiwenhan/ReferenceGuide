@@ -32,32 +32,32 @@ Life Cycle
 Event Handling
 --------------
 
-Event Handling in a Saga is quite comparable to that of a regular Event Listener. The same rules for method and parameter resolution are valid here. There is one major difference, though. While there is a single instance of an Event Listener that deals with all incoming events, multiple instances of a Saga may exist, each interested in different Events. For example, a Saga that manages a transaction around an Order with Id "1" will not be interested in Events regarding Order "2", and vice versa.
+Saga中的事件处理与常规的事件监听器相当。 方法和参数解析的相同规则在这里是有效的。 但是有一个主要区别。 虽然有一个Event Listener实例可处理所有传入事件，但可能存在多个Saga实例，每个实例都对不同的事件感兴趣。 例如，管理交易订单ID为“1”的的Saga将不会对订单“2”的事件感兴趣，反之亦然。
 
-Instead of publishing all Events to all Saga instances (which would be a complete waste of resources), Axon will only publish Events containing properties that the Saga has been associated with. This is done using `AssociationValue`s. An `AssociationValue` consists of a key and a value. The key represents the type of identifier used, for example "orderId" or "order". The value represents the corresponding value, "1" or "2" in the previous example.
+Axon不会将所有事件发布到所有Saga实例（这将完全浪费资源），而只会发布包含Saga与之相关联的属性的Events。 这是使用`AssociationValue`完成的。 一个`AssociationValue`由一个键和一个值组成。 密钥表示所用标识符的类型，例如“orderId”或“order”。 该值表示上例中的对应值“1”或“2”。
     
-The order in which `@SagaEventHandler` annotated methods are evaluated is identical to that of `@EventHandler` methods (see [Annotated Event Handler](event-handling.md#defining-event-handlers)). A method matches if the parameters of the handler method match the incoming Event, and if the saga has an association with the property defined on the handler method.
+评估`@ SagaEventHandler`注释方法的顺序与`@EventHandler`方法的顺序相同（请参阅[注释事件处理程序]（event-handling.md#definition-event-handlers））。 如果处理程序方法的参数与传入的事件匹配，并且该事件与处理程序方法中定义的属性关联，则方法匹配。
 
-The `@SagaEventHandler` annotation has two attributes, of which `associationProperty` is the most important one. This is the name of the property on the incoming Event that should be used to find associated Sagas. The key of the association value is the name of the property. The value is the value returned by property's getter method.
+`@ SagaEventHandler`注解有两个属性，其中`associationProperty`是最重要的属性。 这是应该用于查找关联的Sagas的传入Event上的属性的名称。 关联值的关键是属性的名称。 该值是属性的getter方法返回的值。
 
-For example, consider an incoming Event with a method "`String getOrderId()`", which returns "123". If a method accepting this Event is annotated with `@SagaEventHandler(associationProperty="orderId")`, this Event is routed to all Sagas that have been associated with an `AssociationValue` with key "orderId" and value "123". This may either be exactly one, more than one, or even none at all.
+例如，用一个方法“`String getOrderId（）`”考虑一个传入事件，它返回“123”。 如果接受这个事件的方法用`@SagaEventHandler（associationProperty =“orderId”）`注释，那么这个事件将被路由到所有与具有关键“orderId”和值“123”的AssociationValue关联的Sagas。 这可能只是一个，多于一个，甚至完全没有。
 
-Sometimes, the name of the property you want to associate with is not the name of the association you want to use. For example, you have a Saga that matches Sell orders against Buy orders, you could have a Transaction object that contains the "buyOrderId" and a "sellOrderId". If you want the saga to associate that value as "orderId", you can define a different keyName in the `@SagaEventHandler` annotation. It would then become `@SagaEventHandler(associationProperty="sellOrderId", keyName="orderId")`
+有时，您想要关联的属性的名称不是您想要使用的关联的名称。 例如，您有一个与卖出订单与买入订单相匹配的Saga，您可以拥有一个包含“buyOrderId”和“sellOrderId”的交易对象。 如果您希望Saga将该值与“orderId”相关联，则可以在“@ SagaEventHandler”注释中定义不同的keyName。 它会变成`@SagaEventHandler（associationProperty =“sellOrderId”，keyName =“orderId”）`
 
 Managing associations
 ---------------------
 
-When a Saga manages a transaction across multiple domain concepts, such as Order, Shipment, Invoice, etc, that Saga needs to be associated with instances of those concepts. An association requires two parameters: the key, which identifies the type of association (Order, Shipment, etc) and a value, which represents the identifier of that concept.
+当一个Saga管理跨多个领域概念的事务时，例如订单，货运，发票等，Saga需要与这些概念的实例相关联。 关联需要两个参数：标识关联类型（订单，货件等）的键和表示该概念标识符的值。
 
-Associating a Saga with a concept is done in several ways. First of all, when a Saga is newly created when invoking a `@StartSaga` annotated Event Handler, it is automatically associated with the property identified in the `@SagaEventHandler` method. Any other association can be created using the `SagaLifecycle.associateWith(String key, String/Number value)` method. Use the `SagaLifecycle.removeAssociationWith(String key, String/Number value)` method to remove a specific association.
+将Saga与一个概念联系起来有几种方式。 首先，当调用一个`@ StartSaga`注释的事件处理程序时新创建一个Saga时，它会自动与`@ SagaEventHandler`方法中标识的属性关联。 任何其他关联都可以使用`SagaLifecycle.associateWith（String key，String / Number value）`方法创建。 使用`SagaLifecycle.removeAssociationWith（String key，String / Number value）`方法删除特定的关联。
 
 > Note
 >
-> The API to associate domain concepts within a Saga intentionally only allows a `String` or a `Number` as the identifying value, since a `String` representation of the identifier is required for the association value entry which is stored. Using simple identifier values in the API with a straightforward `String` representation is by design, as a `String` column entry in the database makes the comparison between database engines simpler. It is thus intentionally that there is no `associateWith(String, Object)` for example, as the result of an `Object#toString()` call might provide unwieldy identifiers.
+> 由于存储的关联值条目需要标识符的“字符串”表示，因此在Saga中关联域概念的API有意识地仅允许“String”或“Number”作为标识值。 在API中使用简单的标识符值以简单的`String`表示是设计的，因为数据库中的字符串列条目使数据库引擎之间的比较更简单。 因此，故意没有`associateWith（String，Object）`，因为`Object＃toString（）`调用的结果可能会提供笨拙的标识符。
 
-Imagine a Saga that has been created for a transaction around an Order. The Saga is automatically associated with the Order, as the method is annotated with `@StartSaga`. The Saga is responsible for creating an Invoice for that Order, and tell Shipping to create a Shipment for it. Once both the Shipment have arrived and the Invoice has been paid, the transaction is completed and the Saga is closed.
+想象一下，为一个围绕订单的事务创建了一个Saga。 Saga与订单自动关联，因为该方法用`@StartSaga`注释。 Saga负责为该订单创建发票，并告诉Shipping为其创建货件。 一旦货件到达且发票已付款，交易即告完成，Saga关闭。
 
-Here is the code for such a Saga:
+这里是这样一个Saga的代码：
 
 ``` java
 public class OrderManagementSaga {
@@ -96,30 +96,30 @@ public class OrderManagementSaga {
     // ...
 }
 ```
-By allowing clients to generate an identifier, a Saga can be easily associated with a concept, without the need to a request-response type command. We associate the event with these concepts before publishing the command. This way, we are guaranteed to also catch events generated as part of this command. This will end this saga once the invoice is paid and the shipment has arrived.
+通过允许客户端生成标识符，Saga可以很容易地与一个概念关联，而不需要请求 - 响应类型命令。 在发布命令之前，我们将事件与这些概念相关联。 这样，我们可以保证捕获作为此命令一部分生成的事件。 一旦支付了发票并且货物已经到达，这将结束这个Saga。
 
 Keeping track of Deadlines
 --------------------------
 
-It is easy to make a Saga take action when something happens. After all, there is an Event to notify the Saga. But what if you want your Saga to do something when *nothing* happens? That's what deadlines are used for. In invoices, that's typically several weeks, while the confirmation of a credit card payment should occur within a few seconds.
+当事情发生时，让Saga采取行动很容易。 毕竟，有一个事件通知Saga。 但是，如果你希望你的Saga在没有任何事情发生的时候做点什么？ 这就是截止日期所用的时间。 在发票中，这通常是几周，而信用卡支付的确认应在几秒钟内发生。
 
-In Axon, you can use an `EventScheduler` to schedule an Event for publication. In the example of an Invoice, you'd expect that invoice to be paid within 30 days. A Saga would, after sending the `CreateInvoiceCommand`, schedule an `InvoicePaymentDeadlineExpiredEvent` to be published in 30 days. The EventScheduler returns a `ScheduleToken` after scheduling an Event. This token can be used to cancel the schedule, for example when a payment of an Invoice has been received.
+在Axon中，您可以使用`EventScheduler`来安排发布事件。 在发票的例子中，您希望发票在30天内支付。 Saga在发送`CreateInvoiceCommand`后会安排`InvoicePaymentDeadlineExpiredEvent`在30天内发布。 EventScheduler在安排事件后返回`ScheduleToken`。 此令牌可用于取消计划，例如收到发票付款时。
 
-Axon provides two `EventScheduler` implementations: a pure Java one and one using Quartz 2 as a backing scheduling mechanism.
+Axon提供了两个`EventScheduler`实现：一个纯Java，一个使用Quartz 2作为后台调度机制。
 
-This pure-Java implementation of the `EventScheduler` uses a `ScheduledExecutorService` to schedule Event publication. Although the timing of this scheduler is very reliable, it is a pure in-memory implementation. Once the JVM is shut down, all schedules are lost. This makes this implementation unsuitable for long-term schedules.
+这个“EventScheduler”的纯Java实现使用“ScheduledExecutorService”来安排Event发布。 虽然这个调度程序的时间非常可靠，但它是一个纯粹的内存中实现。 一旦JVM关闭，所有日程安排都将丢失。 这使得这种实现不适合长期计划。
 
-The `SimpleEventScheduler` needs to be configured with an `EventBus` and a `SchedulingExecutorService` (see the static methods on the `java.util.concurrent.Executors` class for helper methods).
+`SimpleEventScheduler`需要配置一个`EventBus`和一个`SchedulingExecutorService`（参见java.util.concurrent.Executors`类的静态方法以获得辅助方法）。
 
-The `QuartzEventScheduler` is a more reliable and enterprise-worthy implementation. Using Quartz as underlying scheduling mechanism, it provides more powerful features, such as persistence, clustering and misfire management. This means Event publication is guaranteed. It might be a little late, but it will be published.
+`QuartzEventScheduler`是一个更可靠和更有企业价值的实现。 使用Quartz作为基础调度机制，它提供了更强大的功能，如持久性，集群和失败管理。 这意味着事件发布是有保证的。 它可能有点晚，但会发布。
 
-It needs to be configured with a Quartz `Scheduler` and an `EventBus`. Optionally, you may set the name of the group that Quartz jobs are scheduled in, which defaults to "AxonFramework-Events".
+它需要配置一个Quartz`Scheduler`和一个`EventBus`。 或者，您可以设置Quartz作业计划的组名，默认为“AxonFramework-Events”。
 
-One or more components will be listening for scheduled Events. These components might rely on a Transaction being bound to the Thread that invokes them. Scheduled Events are published by Threads managed by the `EventScheduler`. To manage transactions on these threads, you can configure a `TransactionManager` or a `UnitOfWorkFactory` that creates a Transaction Bound Unit of Work.
+一个或多个组件将监听预定的事件。 这些组件可能依赖于绑定到调用它们的线程的事务。 计划事件由`EventScheduler`管理的线程发布。 为了管理这些线程上的事务，你可以配置一个`TransactionManager`或一个`UnitOfWorkFactory`来创建一个Transaction Bound of Work。
 
 > **Note**
 >
-> Spring users can use the `QuartzEventSchedulerFactoryBean` or `SimpleEventSchedulerFactoryBean` for easier configuration. It allows you to set the PlatformTransactionManager directly.
+> Spring用户可以使用`QuartzEventSchedulerFactoryBean`或`SimpleEventSchedulerFactoryBean`来简化配置。 它允许您直接设置PlatformTransactionManager。
 
 Injecting Resources
 -------------------
