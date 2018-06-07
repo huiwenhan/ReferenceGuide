@@ -124,29 +124,29 @@ Axon提供了两个`EventScheduler`实现：一个纯Java，一个使用Quartz 2
 Injecting Resources
 -------------------
 
-Sagas generally do more than just maintaining state based on Events. They interact with external components. To do so, they need access to the Resources necessary to address to components. Usually, these resources aren't really part of the Saga's state and shouldn't be persisted as such. But once a Saga is reconstructed, these resources must be injected before an Event is routed to that instance.
+Sagas通常不仅仅是基于事件维护状态。 他们与外部组件进行交互。 为此，他们需要访问必要的资源来处理组件。 通常情况下，这些资源并不是Saga的一部分，不应该坚持这样。 但是一旦重构了Saga，这些资源就必须在事件发送到该事件之前注入。
 
-For that purpose, there is the `ResourceInjector`. It is used by the `SagaRepository` to inject resources into a Saga. Axon provides a `SpringResourceInjector`, which injects annotated fields and methods with Resources from the Application Context, and a `SimpleResourceInjector`, which injects resources that have been registered with it into `@Inject` annotated methods and fields.
+为此，有`ResourceInjector`。 它被`SagaRepository`用来向Saga注入资源。 Axon提供了一个`SpringResourceInjector`，它通过Application Context中的资源注入带注释的字段和方法，以及一个`SimpleResourceInjector`，它将注册的资源注入`@Inject`注释的方法和字段。
 
 > **Tip**
 >
-> Since resources should not be persisted with the Saga, make sure to add the `transient` keyword to those fields. This will prevent the serialization mechanism to attempt to write the contents of these fields to the repository. The repository will automatically re-inject the required resources after a Saga has been deserialized.
+>由于资源不应该与Saga持久，请务必将`transient`关键字添加到这些字段。 这将阻止序列化机制尝试将这些字段的内容写入存储库。 在Saga被反序列化后，存储库将自动重新注入所需的资源。
 
-The `SimpleResourceInjector` allows for a pre-specified collection of resources to be injected. It scans the (setter) methods and fields of a Saga to find ones that are annotated with `@Inject`.
+`SimpleResourceInjector`允许注入预先指定的资源集合。 它扫描Saga的（setter）方法和字段，找到用@ @Inject注释的方法和字段。
 
-When using the Configuration API, Axon will default to the `ConfigurationResourceInjector`. It will inject any resource available in the Configuration. Components like the `EventBus`, `EventStore`, `CommandBus` and `CommandGateway` are available by default, but you can also register your own components using `configurer.registerComponent()`.
+当使用配置API时，Axon将默认为`ConfigurationResourceInjector`。 它将注入配置中可用的任何资源。 像EventBus，EventStore，CommandBus和CommandGateway这样的组件可以默认使用，但你也可以使用`configurer.registerComponent（）`注册你自己的组件。
 
-The `SpringResourceInjector` uses Spring's dependency injection mechanism to inject resources into an aggregate. This means you can use setter injection or direct field injection if you require. The method or field to be injected needs to be annotated in order for Spring to recognize it as a dependency, for example with `@Autowired`.
+`SpringResourceInjector`使用Spring的依赖注入机制将资源注入到聚合中。 这意味着如果需要，您可以使用setter注射或直接领域注射。 要注入的方法或字段需要注释以便Spring将其识别为依赖项，例如使用`@ Autowired`。
 
 Saga Infrastructure
 ===================
 
-Events need to be redirected to the appropriate Saga instances. To do so, some infrastructure classes are required. The most important components are the `SagaManager` and the `SagaRepository`.
+事件需要重定向到适当的Saga实例。 为此，需要一些基础结构类。 最重要的组件是`SagaManager`和`SagaRepository`。
 
 Saga Manager
 ------------
 
-Like any component that handles Events, the processing is done by an Event Processor. However, since Sagas aren't singleton instances handling Events, but have individual life cycles, they need to be managed. 
+与处理事件的任何组件一样，处理由事件处理器完成。 但是，由于Sagas不是处理事件的单例实例，而是具有单独的生命周期，因此需要对其进行管理。
 
 Axon supports life cycle management through the `AnnotatedSagaManager`, which is provided to an Event Processor to perform the actual invocation of handlers. It is initialized using the type of the Saga to manage, as well as a SagaRepository where Sagas of that type can be stored and retrieved. A single `AnnotatedSagaManager` can only manage a single Saga type.
 
