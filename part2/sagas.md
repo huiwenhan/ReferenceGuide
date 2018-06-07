@@ -1,29 +1,33 @@
 Managing complex business transactions
 ======================================
 
-Not every command is able to completely execute in a single ACID transaction. A very common example that pops up quite often as an argument for transactions is the money transfer. It is often believed that an atomic and consistent transaction is absolutely required to transfer money from one account to another. Well, it's not. On the contrary, it is quite impossible to do. What if money is transferred from an account on Bank A, to another account on Bank B? Does Bank A acquire a lock in Bank B's database? If the transfer is in progress, is it strange that Bank A has deducted the amount, but Bank B hasn't deposited it yet? Not really, it's "underway". On the other hand, if something goes wrong while depositing the money on Bank B's account, Bank A's customer would want his money back. So we do expect some form of consistency, ultimately.
+并非每个命令都能够在单个ACID事务中完全执行。 资金转移是一个很常见的例子，它常常作为交易的一个参数出现。 人们通常认为，将资金从一个账户转移到另一个账户绝对需要原子和一致的交易。 好吧，事实并非如此。 相反，这是不可能的。 如果资金从银行A的账户转移到银行B的另一个账户，该怎么办？ A银行是否获得了B银行数据库的锁定？ 如果转帐正在进行中，银行A已扣除金额，但银行B尚未存入吗？ 不是真的，这是“正在进行”。 另一方面，如果在将钱存入银行B的账户时出现问题，则银行A的客户会想要退还他的钱。 所以我们确实期望一定的一致性。
 
-While ACID transactions are not necessary or even impossible in some cases, some form of transaction management is still required. Typically, these transactions are referred to as BASE transactions: **B**asic **A**vailability, **S**oft state, **E**ventual consistency. Contrary to ACID, BASE transactions cannot be easily rolled back. To roll back, compensating actions need to be taken to revert anything that has occurred as part of the transaction. In the money transfer example, a failure at Bank B to deposit the money, will refund the money in Bank A.
 
-In CQRS, Sagas can be used to manage these BASE transactions. They respond on Events and may dispatch Commands, invoke external applications, etc. In the context of Domain Driven Design, it is not uncommon for Sagas to be used as coordination mechanism between several bounded contexts.
+尽管ACID交易在某些情况下不是必需的，甚至不可能，但仍需要某种形式的交易管理。 通常，这些事务被称为BASE事务：基本可用性，软状态，最终一致性。 与ACID相反，BASE事务不能轻易回滚。 为了回滚，需要采取补偿行动来恢复作为交易一部分发生的任何事情。 在汇款的例子中，B银行存款失败将退还银行A的款项。
+
+在CQRS中，Sagas可以用来管理这些BASE事务。 他们对事件做出响应并可能调度命令，调用外部应用程序等。在域驱动设计的背景下，萨加斯被用作几个有界上下文之间的协调机制并不罕见。
+
 
 Saga
 ====
 
-A Saga is a special type of Event Listener: one that manages a business transaction. Some transactions could be running for days or even weeks, while others are completed within a few milliseconds. In Axon, each instance of a Saga is responsible for managing a single business transaction. That means a Saga maintains state necessary to manage that transaction, continuing it or taking compensating actions to roll back any actions already taken. Typically, and contrary to regular Event Listeners, a Saga has a starting point and an end, both triggered by Events. While the starting point of a Saga is usually very clear, there could be many ways for a Saga to end.
+Saga是一种特殊类型的事件监听器：一种管理商业交易的事件监听器。 一些交易可能会持续几天甚至几周，而其他交易则会在几毫秒内完成。 在Axon中，Saga的每个实例都负责管理单个业务事务。 这意味着Saga保持管理该交易所需的状态，继续执行或采取补偿行动以回滚已采取的任何行动。 通常情况下，与常规事件监听器相反，Saga有起点和终点，都是由事件触发的。 虽然Saga的出发点通常很清楚，但Saga可以有很多方式结束。
 
-In Axon, Sagas are classes that define one or more `@SagaEventHandler` methods. Unlike regular Event Handlers, multiple instances of a Saga may exist at any time. Sagas are managed by a single Processor (Tracking or Subscribing), which is dedicated to dealing with Events for that specific Saga type.
+
+在Axon中，Sagas是定义一个或多个@SagaEventHandler方法的类。 与常规事件处理程序不同，传奇的多个实例可能随时存在。 Sagas由一个处理器（追踪或订阅）管理，该处理器专用于处理该特定Saga类型的事件。
+
 
 Life Cycle
 ----------
 
-A single Saga instance is responsible for managing a single transaction. That means you need to be able to indicate the start and end of a Saga's Life Cycle.
+单个Saga实例负责管理单个事务。 这意味着您需要能够指示Saga的生命周期的开始和结束。
 
-In a Saga, Event Handlers are annotated with `@SagaEventHandler`. If a specific Event signifies the start of a transaction, add another annotation to that same method: `@StartSaga`. This annotation will create a new saga and invoke its event handler method when a matching Event is published.
+在Saga中，事件处理程序用`@ SagaEventHandler`注释。 如果一个特定的事件表示一个事务的开始，则将另一个注释添加到同一个方法：`@ StartSaga`。 此注释将创建一个新的Saga，并在发布匹配的事件时调用其事件处理函数方法。
 
-By default, a new Saga is only started if no suitable existing Saga (of the same type) can be found. You can also force the creation of a new Saga instance by setting the `forceNew` property on the `@StartSaga` annotation to `true`.
+默认情况下，只有当没有合适的现有Saga（同类型）可以找到时才会启动新的Saga。 您还可以通过将`@ StartSaga`注释中的`forceNew`属性设置为`true`来强制创建新的Saga实例。
 
-Ending a Saga can be done in two ways. If a certain Event always indicates the end of a Saga's life cycle, annotate that Event's handler on the Saga with `@EndSaga`. The Saga's Life Cycle will be ended after the invocation of the handler. Alternatively, you can call `SagaLifecycle.end()` from inside the Saga to end the life cycle. This allows you to conditionally end the Saga.
+结束Saga可以通过两种方式完成。 如果某个事件总是表示Saga的生命周期结束，请用`@ EndSaga`在该传奇中注释该事件的处理程序。 Saga的生命周期将在调用处理程序后结束。 或者，您可以从传奇内部调用“SagaLifecycle.end（）”来结束生命周期。 这可以让你有条件地结束Saga。
 
 Event Handling
 --------------
